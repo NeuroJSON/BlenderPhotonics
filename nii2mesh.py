@@ -42,7 +42,7 @@ class nii2mesh(bpy.types.Operator):
         c=0
         for item in lst_ply:
             fileName, fileExtension = os.path.splitext(lst_ply[c])
-            if fileExtension == ".stl":
+            if fileExtension == ".stl" and (not fileName.startswith('volumic_mesh')):
                 candidates.append(item)
                 candidates_name.append(fileName)
             c=c+1

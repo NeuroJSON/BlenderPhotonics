@@ -26,7 +26,7 @@ class mesh2scene(bpy.types.Operator):
         c=0
         for item in lst_ply:
             fileName, fileExtension = os.path.splitext(lst_ply[c])
-            if fileExtension == ".stl":
+            if fileExtension == ".stl" and (not fileName.startswith('volumic_mesh')):
                 candidates.append(item)
                 candidates_name.append(fileName)
             c=c+1
@@ -58,7 +58,7 @@ class mesh2scene(bpy.types.Operator):
 
         ## add cfg option
         obj = bpy.data.objects['light']
-        obj["nphoton"] = 100
+        obj["nphoton"] = 10000
         obj["unitinmm"] = 1.0
         obj["srctype"] = 1 # pencil:'1'  disk:'2'
 

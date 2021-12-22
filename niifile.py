@@ -4,7 +4,7 @@ from bpy.types import PropertyGroup
 
 class niifile(PropertyGroup):
     path: StringProperty(
-        name = "NIfTI",
+        name = "NIfTI File",
         description="NIfTI file name:",
         default="",
         maxlen=2048,
