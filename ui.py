@@ -1,13 +1,13 @@
 import bpy
-from .Genert_Volumatic_Mesh import Creatregion
-from .Import_Mesh import import_volum_mesh
-from .RunMMC import runmmc
-from .Niipath import MyProperties
-from .Genert_mesh_from_nii import niitomesh
+from .blender2mesh import scene2mesh
+from .mesh2blender import mesh2scene
+from .runmmc import runmmc
+from .niifile import niifile
+from .nii2mesh import nii2mesh
 
-class Test_Panel(bpy.types.Panel):
-    bl_label = 'BlenderPhotonics'
-    bl_idname = 'A_TEST_PL'
+class BlenderPhotonics_UI(bpy.types.Panel):
+    bl_label = 'BlenderPhotonics 0.5'
+    bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "BlenderPhotonics"
@@ -20,10 +20,10 @@ class Test_Panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        mytool = scene.my_tool
-        layout.prop(mytool, "my_path")
+        bp = scene.blender_photonics
+        layout.prop(bp, "path")
         col = layout.column()
-        col.operator(niitomesh.bl_idname)
-        col.operator(Creatregion.bl_idname)
-        col.operator(import_volum_mesh.bl_idname)
+        col.operator(nii2mesh.bl_idname)
+        col.operator(scene2mesh.bl_idname)
+        col.operator(mesh2scene.bl_idname)
         col.operator(runmmc.bl_idname)

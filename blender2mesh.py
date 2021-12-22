@@ -3,21 +3,23 @@ import oct2py as op
 import numpy as np
 import scipy.io
 import os
+import tempfile
 
 
-class Creatregion(bpy.types.Operator):
-    bl_label = 'Genert Volumatic Mesh'
-    bl_description = "This botton can call iso2mesh to genert tetrahedral mesh. (Please save your blender file first!)"
-    bl_idname = 'a_test.creatregion'
+class scene2mesh(bpy.types.Operator):
+    bl_label = 'Convert Scene to Mesh'
+    bl_description = "Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)"
+    bl_idname = 'blenderphotonics.create3dmesh'
 
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    keepratio: bpy.props.FloatProperty(default=1.0,name="ratio keep for volum mesh(0-1)")
-    maxvolum: bpy.props.FloatProperty(default=100.0, name="Max_tetrahedraw_volum")
+    keepratio: bpy.props.FloatProperty(default=1.0,name="Percent of the edges to be kept (0-1)")
+    maxvolum: bpy.props.FloatProperty(default=100.0, name="Maximum tetrahedron volume")
 
     def func(self):
-        os.chdir(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/Model')
+        oc = op.Oct2Py()
+        oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script'))
         
         #remove camera and light
         for ob in bpy.context.scene.objects:
@@ -29,7 +31,6 @@ class Creatregion(bpy.types.Operator):
             bpy.ops.object.delete()
 
         obj = bpy.context.view_layer.objects.active
-        #jioned
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.convert(target='MESH')
         if len(bpy.context.selected_objects)>=2:
@@ -37,7 +38,7 @@ class Creatregion(bpy.types.Operator):
 
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE', solver='EXACT')
+        bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
         bpy.ops.object.editmode_toggle()
@@ -53,16 +54,19 @@ class Creatregion(bpy.types.Operator):
             verts.append(v_global)
         edges = [edge.vertices[:] for edge in obj.data.edges]
         faces = [face.vertices[:] for face in obj.data.polygons]
-        print("="*40) # printing marker
+        #print("="*40) # printing marker
 
         oc = op.Oct2Py()
-        oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/iso2mesh'))
+        #oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/iso2mesh'))
 
         v = np.array(verts)
         f = np.array(faces)
         
         # Remove last .stl file
-        in_dir_ply = (bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/Model/stlfile')
+        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
+        if not os.path.isdir(in_dir_ply):
+            os.mkdir(in_dir_ply)
+
         lst_ply = os.listdir(in_dir_ply)
         c=0
         for item in lst_ply:
@@ -73,13 +77,13 @@ class Creatregion(bpy.types.Operator):
             c=c+1
 
         # Save file
-        scipy.io.savemat('result.mat', mdict={'v':v, 'f':f, 'ratio':self.keepratio, 'maxv':self.maxvolum})
-        oc.run(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/Model/demo_blender.m')
+        scipy.io.savemat(in_dir_ply+'/'+'blendermesh.mat', mdict={'v':v, 'f':f, 'ratio':self.keepratio, 'maxv':self.maxvolum})
+        oc.run(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script/blender2mesh.m')
         
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
-        bpy.ops.import_mesh.stl(filepath='volumic_mesh.stl', files=[{'name': 'volumic_mesh.stl'}], directory=(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/Model'), filter_glob="*.stl")
+        bpy.ops.import_mesh.stl(filepath=in_dir_ply+'/volumic_mesh.stl', files=[{'name': in_dir_ply+'/volumic_mesh.stl'}], directory=in_dir_ply, filter_glob="*.stl")
 
     def execute(self, context):
         print("begin to genert volumic mesh")

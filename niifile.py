@@ -2,12 +2,12 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import PropertyGroup
 
-class MyProperties(PropertyGroup):
-    my_path: StringProperty(
-        name = "nii file",
-        description="Choose nii file here:",
+class niifile(PropertyGroup):
+    path: StringProperty(
+        name = "NIfTI",
+        description="NIfTI file name:",
         default="",
-        maxlen=1024,
+        maxlen=2048,
         subtype='FILE_PATH'
         )
     

@@ -3,20 +3,21 @@ import oct2py as op
 import numpy as np
 import scipy.io
 import os
+import tempfile
 
-class import_volum_mesh(bpy.types.Operator):
-    bl_label = 'Import Tetrahedral mesh'
-    bl_description = "This botton can import tetrahedral mesh, please give the optical parameter to each region. Light should be in the model, otherwise, mmc will change the light source location."
-    bl_idname = 'a_test.import_volum_mesh'
+class mesh2scene(bpy.types.Operator):
+    bl_label = 'Load Mesh to Scene'
+    bl_description = 'Import mesh to Blender. If one needs to run MMC photon simulations, please remember to set the optical properties to each region'
+    bl_idname = 'blenderphotonics.meshtoscene'
     
-    def funivm(self):
+    def importmesh(self):
         # clear all object
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
 
         
         # folder path for importing .stl files
-        in_dir_ply = (bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/Model/stlfile')
+        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
         lst_ply = os.listdir(in_dir_ply)
 
         # Filter file list by valid file types.
@@ -39,13 +40,12 @@ class import_volum_mesh(bpy.types.Operator):
             bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=in_dir_ply, filter_glob="*.stl")
 
 
-    
         ## add properties
         for obj in bpy.data.objects:
-            obj["mu_a"] = 0.1
-            obj["mu_s"] = 0.1
+            obj["mu_a"] = 0.01
+            obj["mu_s"] = 1
+            obj["g"] = 0.0
             obj["n"] = 1.37
-            obj["g"] = 0.89
 
         ## add light
         light_data = bpy.data.lights.new(name="light", type='SPOT')
@@ -60,9 +60,9 @@ class import_volum_mesh(bpy.types.Operator):
         obj = bpy.data.objects['light']
         obj["nphoton"] = 100
         obj["unitinmm"] = 1.0
-        obj["Type"] = 1 # pencil:'1'  disk:'2'
+        obj["srctype"] = 1 # pencil:'1'  disk:'2'
 
     def execute(self, context):
-        print("begin to Import Region Mesh")
-        self.funivm()
+        print("begin to import region mesh")
+        self.importmesh()
         return {"FINISHED"}

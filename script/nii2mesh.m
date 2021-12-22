@@ -1,4 +1,6 @@
-load path.mat
+function nii2mesh
+
+load(bpmwpath('niipath.mat'));
 test = loadnifti(path);
 
 clear opt
@@ -12,17 +14,17 @@ end
 %% post processing, scale mesh with the voxel size 0.1 mm
 node(:,4)=[];
 elem(:,1:4)=meshreorient(node(:,1:3),elem(:,1:4));
-save('-mat7-binary','meshdata.mat','node','elem','face');
+save('-mat7-binary',bpmwpath('niimesh.mat'),'node','elem','face');
 
 for n = 1:max(elem(:,5))
     disp(["region ",num2str(n),' is saving...'])
     fc1=volface(elem(elem(:,5)==n,1:4));
-    filename1 = ['./stlfile/',num2str(n), ".stl"];
+    filename = bpmwpath([num2str(n), ".stl"]);
     savestl(node,fc1,filename1)
     disp(['saving complete.'])
 end
 
 disp(['begin to save whole volumic mesh.'])
 faces = meshface(elem(:,1:4));
-savestl(node,faces,'volumic_mesh.stl');
+savestl(node,faces,bpmwpath('volumic_mesh.stl'));
 disp(['saving complete.'])

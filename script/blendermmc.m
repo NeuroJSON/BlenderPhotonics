@@ -1,11 +1,11 @@
-%% load the sample data
-clear all
-load MMCinfo.mat
-load meshdata.mat
+function blendermmc
+
+load(bpmwpath('mmcinfo.mat'));
+load(bpmwpath('meshdata.mat'));
 
 %% Pre-processing data
-airpara = [0,0,1,1];
-Optical_parameter = [airpara;reshape(Optical,[],max(elem(:,5)))'];
+propbk = [0,0,1,1];
+Optical_parameter = [propbk;reshape(Optical,[],max(elem(:,5)))'];
 Q=num2cell(light_direction);
 [w,x,y,z] = Q{:};
 R = [1-2*y^2-2*z^2,2*x*y-2*z*w,2*x*z+2*y*w;
@@ -41,7 +41,7 @@ fluxlog1 = log10(abs(flux.data(1:size(cfg.node,1))));
 min = unique(fluxlog1);
 fluxlog=fluxlog1;
 fluxlog(find(fluxlog1 == -inf)) = min(2);
-save('-mat7-binary','fluxlog.mat','fluxlog'); % flux to log scale and -inf to 0
+save('-mat7-binary',bpmwpath('fluxlog.mat'),'fluxlog'); % flux to log scale and -inf to 0
 
 faces = meshface(cfg.elem);
 order = faces';
@@ -51,4 +51,4 @@ nodeorder = order(sort(i));
 % get vetexs order for blender(.stl file to blender will change the order for vertex. If you use .off file can avoid this step. However, you need install .off import add-on first and change the import_mesh.stl to import_mesh.off)
 % In Matlab, commond can be "nodeorder = unique(order,'stable');". Octave do not accept 'stable'
 
-save('-mat7-binary','nodeorder.mat','nodeorder');
+save('-mat7-binary',bpmwpath('nodeorder.mat'),'nodeorder');

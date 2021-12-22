@@ -1,41 +1,41 @@
 bl_info = {
     "name": "BlenderPhotonics",
-    "author": "Victor",
-    "version": (1, 0),  # 插件版本
-    "blender": (2, 91, 0),  # 支持blender版本
+    "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
+    "version": (1, 0),  # min plug-in version
+    "blender": (2, 82, 0),  # min blender version
     "location": "Layout，UI",
-    "description": "Modeling in Blender and autorun mmc in Octave",
-    "warning": "work with Blender and MMC in Octave. Matlab is not support. Tested on MacOS；Save your blender file before using this add-on!",
-    "doc_url": "github",
-    "tracker_url": "bug report",
-    "category": "Photon Simulation",
+    "description": "An integrated 3D mesh generation and Monte Carlo photon transport simulation environment",
+    "warning": "This plug-in requires the preinstallation of Iso2Mesh (http://iso2mesh.sf.net) and MMCLAB (http://mcx.space)",
+    "doc_url": "https://github.com/fangq/BlenderPhotonics",
+    "tracker_url": "https://github.com/fangq/BlenderPhotonics/issues",
+    "category": "User Interface",
 }
 import bpy
-from .Genert_Volumatic_Mesh import Creatregion
-from .ui import Test_Panel
-from .Import_Mesh import import_volum_mesh
-from .RunMMC import runmmc
-from .Niipath import MyProperties
+from .ui import BlenderPhotonics_UI
+from .blender2mesh import scene2mesh
+from .mesh2blender import mesh2scene
+from .runmmc import runmmc
+from .niifile import niifile
+from .nii2mesh import nii2mesh
 from bpy.props import PointerProperty
-from .Genert_mesh_from_nii import niitomesh
 
 def register():
-    print("Run MMC in Blender installed")
-    bpy.utils.register_class(MyProperties)
-    bpy.utils.register_class(niitomesh)
-    bpy.utils.register_class(Creatregion)
-    bpy.utils.register_class(import_volum_mesh)
+    print("Registering BlenderPhotonics")
+    bpy.utils.register_class(scene2mesh)
+    bpy.utils.register_class(niifile)
+    bpy.utils.register_class(nii2mesh)
+    bpy.utils.register_class(mesh2scene)
     bpy.utils.register_class(runmmc)
-    bpy.utils.register_class(Test_Panel)
-    bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
+    bpy.utils.register_class(BlenderPhotonics_UI)
+    bpy.types.Scene.blender_photonics = PointerProperty(type=niifile)
 
 
 def unregister():
-    print("Run MMC in Blender uninstalled")
-    bpy.utils.unregister_class(MyProperties)
-    bpy.utils.unregister_class(niitomesh)
-    bpy.utils.unregister_class(Creatregion)
-    bpy.utils.unregister_class(import_volum_mesh)
+    print("Unregistering BlenderPhotonics")
+    bpy.utils.unregister_class(scene2mesh)
+    bpy.utils.unregister_class(niifile)
+    bpy.utils.unregister_class(nii2mesh)
+    bpy.utils.unregister_class(mesh2scene)
     bpy.utils.unregister_class(runmmc)
-    bpy.utils.unregister_class(Test_Panel)
-    del bpy.types.Scene.my_tool
+    bpy.utils.unregister_class(BlenderPhotonics_UI)
+    del bpy.types.Scene.blender_photonics

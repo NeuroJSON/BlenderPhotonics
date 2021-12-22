@@ -26,5 +26,9 @@ How to install:
  
 4, Restart Blender and enanble BlenderPhotonics
 
-  Move BlenderPhotonics folder to blender script path. You can found path in 'https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html'. Then restart Blender and go to '' Edit --> Preference --> Add-ons'' and search "BlenderPhotonics". Enable it and you will see a interface named "BlenderPhotonics" in Layout view.
+  Move BlenderPhotonics folder to blender script path. You can found path in 
+  'https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html'. 
+  Then restart Blender and go to '' Edit --> Preference --> Add-ons'' and search 
+  "BlenderPhotonics". Enable it and you will see a interface named 
+  "BlenderPhotonics" in Layout view.
    
