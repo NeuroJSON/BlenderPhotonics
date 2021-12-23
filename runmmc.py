@@ -7,7 +7,7 @@ import platform
 import tempfile
 
 class runmmc(bpy.types.Operator):
-    bl_label = 'Run MMC'
+    bl_label = 'Run MMC photon simulation'
     bl_description = "Run mesh-based Monte Carlo simulation"
     bl_idname = 'blenderphotonics.runmmc'
     
@@ -67,6 +67,8 @@ class runmmc(bpy.types.Operator):
             ind=vertexs.index(vert)
             new_vertex_group.add([ind], weight_data[int(order['nodeorder'][ind])-1], 'ADD')
         bpy.ops.paint.weight_paint_toggle()
+
+        bpy.context.space_data.shading.type = 'SOLID'
 
         print('Finshed!, Please change intereaction mode to Weight Paint to see result!')
         print('''If you prefer a perspective effect，please go to edit mode and make sure shading 'Vertex Group Weight' is on.''')

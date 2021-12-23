@@ -6,7 +6,7 @@ import os
 import tempfile
 
 class mesh2scene(bpy.types.Operator):
-    bl_label = 'Load Mesh to Scene'
+    bl_label = 'Load mesh and setup simulation'
     bl_description = 'Import mesh to Blender. If one needs to run MMC photon simulations, please remember to set the optical properties to each region'
     bl_idname = 'blenderphotonics.meshtoscene'
     

@@ -6,8 +6,8 @@ bl_info = {
     "location": "Layout，UI",
     "description": "An integrated 3D mesh generation and Monte Carlo photon transport simulation environment",
     "warning": "This plug-in requires the preinstallation of Iso2Mesh (http://iso2mesh.sf.net) and MMCLAB (http://mcx.space)",
-    "doc_url": "https://github.com/fangq/BlenderPhotonics",
-    "tracker_url": "https://github.com/fangq/BlenderPhotonics/issues",
+    "doc_url": "https://github.com/COTILab/BlenderPhotonics",
+    "tracker_url": "https://github.com/COTILab/BlenderPhotonics/issues",
     "category": "User Interface",
 }
 import bpy

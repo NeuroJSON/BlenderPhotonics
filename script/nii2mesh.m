@@ -1,13 +1,22 @@
 function nii2mesh
 
 load(bpmwpath('niipath.mat'));
-test = loadnifti(path);
 
-clear opt
-for n = 1:max(test.NIFTIData(:))
-    opt(n).keepratio=0.1;
-    opt(n).radbound=5;
-    opt(n).side='lower';
+if(~isempty(regexp(path,'\.[jb]*nii(\.gz)*$','match','ignorecase')))
+    test = loadnifti(path);
+else if(~isempty(regexp(path,'\.mat$','match','ignorecase')))
+    tmp=load(path);
+    vars=fieldnames(tmp);
+    for i=1:length(vars)
+        if(ndims(tmp.(vars{i}))==3)
+		test.NIFTIData=tmp.tmp.(vars{i});
+		break;
+	end
+    end
+end
+
+if(exist('opt','var')==0)
+    opt=struct('radbound',5, 'distbound',1);
 end
 
 [node,elem,face]=vol2mesh(test.NIFTIData,1:size(test.NIFTIData,1),1:size(test.NIFTIData,2),1:size(test.NIFTIData,3),opt,100,1,'cgalmesh');
