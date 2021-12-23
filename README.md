@@ -14,7 +14,7 @@ Installation
 1. Install Blender (2.8 or higher) and Octave (5.0 or lower) and add them to the `PATH` environment variable.
    on Ubuntu Linux, this can be done by `sudo apt-get install blender octave`
 2. Install Python module `oct2py` for the bundled (built-in) Python inside Blender
-    1. This can be down by first identifying the bundled Python by running blender, go to the 
+    1. This can be done by first identifying the bundled Python by running blender, go to the 
        *Scripting* tab, in the left-middle Console panel, you can see the Python version, for example, is 3.x
     2. Open a terminal, type `python3 --version`, if the printed version is the same as Blender bundled Python 
        version, you may go to Step 2.4
