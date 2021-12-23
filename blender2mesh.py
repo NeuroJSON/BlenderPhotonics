@@ -23,7 +23,10 @@ class scene2mesh(bpy.types.Operator):
         
         #remove camera and light
         for ob in bpy.context.scene.objects:
-            ob.select_set(False)
+            try:
+                ob.select_set(False)
+            except:
+                continue;
             if ob.type == 'CAMERA':
                 ob.select_set(True)
             elif ob.type == 'LIGHT':
@@ -32,7 +35,10 @@ class scene2mesh(bpy.types.Operator):
 
         obj = bpy.context.view_layer.objects.active
         bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.convert(target='MESH')
+        try:
+            bpy.ops.object.convert(target='MESH')
+        except:
+            pass;
         if len(bpy.context.selected_objects)>=2:
             bpy.ops.object.join()
 
