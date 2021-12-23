@@ -2,10 +2,28 @@
 BlenderPhotonics
 ========================
 
--   Author: Yuxuan Zhang (zhang.yuxuan1@northeastern.edu) and Qianqian Fang (q.fang at neu.edu)
+-   Author: Yuxuan Zhang (zhang.yuxuan1 at northeastern.edu) and Qianqian Fang (q.fang at neu.edu)
 -   License: GNU General Public License version 3 (GPLv3)
 -   Version: 0.5
 -   Website: <http://mcx.space/BlenderPhotonics>
+
+Introduction
+-------------
+BlenderPhotonics is a Blender addon to enable 3-D tetrahedral mesh generation (via [Iso2Mesh](http://iso2mesh.sf.net))
+and mesh-based Monte Carlo (MMC) photon simulations (via [MMCLAB](http://mcx.space/wiki/?Learn#mmclab)) inside
+the Blender environment. Both Iso2Mesh and MMCLAB are executed in GNU Octave, which interoperates with Blender
+via the `oct2py` module and the `bpy` Python interface.
+
+BlenderPhotonics supports three processing workflows: 1) converting 3-D Blender objects to region-labeled
+tetrahedral meshes and triangular surfaces; 2) converting a volumetric image stored in a NIfTI file to a
+multi-labeled tetrahedral mesh, and 3) defining optical properties of each region and a light source to
+execute and render MMC simulation results. Each feature can be achieved via a single click on the GUI.
+
+BlenderPhotonics combines the interactive 3-D shape creation/editing and advanced modeling capabilities 
+provided by Blender with state-of-the-art Monte Carlo (MC) light simulation techniques and GPU acceleration. 
+It uses Blender's user-friendly computer-aided-design (CAD) interface as the front-end to allow creations 
+of complex domains, making it easy-to-use for less-experienced users to create sophisticated optical
+simulations needed for a wide range of biophotonics applications.
 
 
 Installation
