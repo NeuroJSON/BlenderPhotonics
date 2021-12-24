@@ -17,8 +17,8 @@ class mesh2scene(bpy.types.Operator):
 
         
         # folder path for importing .stl files
-        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
-        lst_ply = os.listdir(in_dir_ply)
+        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        lst_ply = os.listdir(outputdir)
 
         # Filter file list by valid file types.
         candidates = []
@@ -37,7 +37,7 @@ class mesh2scene(bpy.types.Operator):
 
         # To import mesh.ply in batches
         for i in range (0,n):
-            bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=in_dir_ply, filter_glob="*.stl")
+            bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=outputdir, filter_glob="*.stl")
 
 
         ## add properties

@@ -12,17 +12,17 @@ class nii2mesh(bpy.types.Operator):
     
     def preparenii(self):
         oc = op.Oct2Py()
-        oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script'))
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         # Remove last .stl file
-        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
-        lst_ply = os.listdir(in_dir_ply)
+        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        lst_ply = os.listdir(outputdir)
         c=0
         for item in lst_ply:
             fileName, fileExtension = os.path.splitext(lst_ply[c])
             if fileExtension == ".stl":
-                os.remove(os.path.join(in_dir_ply,item))
-                print ("Delete File: " + os.path.join(in_dir_ply,item))
+                os.remove(os.path.join(outputdir,item))
+                print ("Delete File: " + os.path.join(outputdir,item))
             c=c+1
         
         # nii to mesh
@@ -31,13 +31,13 @@ class nii2mesh(bpy.types.Operator):
             return
         scipy.io.savemat('niipath.mat', mdict={'path':path})
 
-        oc.run(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script/nii2mesh.m')
-        
+        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','nii2mesh.m'))
+
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
         # folder path for importing .stl files
-        lst_ply = os.listdir(in_dir_ply)
+        lst_ply = os.listdir(outputdir)
 
         # Filter file list by valid file types.
         candidates = []
@@ -55,7 +55,7 @@ class nii2mesh(bpy.types.Operator):
 
         # To import mesh.ply in batches
         for i in range (0,n):
-            bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=in_dir_ply, filter_glob="*.stl")
+            bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=outputdir, filter_glob="*.stl")
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
 

@@ -14,35 +14,31 @@ class scene2mesh(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    keepratio: bpy.props.FloatProperty(default=1.0,name="Percent of edges to be kept (0-1)")
     maxvolum: bpy.props.FloatProperty(default=1.0, name="Maximum tetrahedron volume")
+    keepratio: bpy.props.FloatProperty(default=1.0,name="Percent of edges to be kept (0-1)")
 
     def func(self):
         oc = op.Oct2Py()
-        oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script'))
+        print(os.path.join(os.path.dirname(os.path.abspath(__file__)+'script')))
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         
         #remove camera and light
         for ob in bpy.context.scene.objects:
-            try:
-                ob.select_set(False)
-            except:
-                continue;
-            if ob.type == 'CAMERA':
+            ob.select_set(False)
+            print(ob.type)
+            if ob.type == 'CAMERA' or ob.type == 'LIGHT':
                 ob.select_set(True)
-            elif ob.type == 'LIGHT':
-                ob.select_set(True)
-            bpy.ops.object.delete()
+
+        bpy.ops.object.delete()
 
         obj = bpy.context.view_layer.objects.active
         bpy.ops.object.select_all(action='SELECT')
-        try:
-            bpy.ops.object.convert(target='MESH')
-        except:
-            pass;
+        bpy.ops.object.convert(target='MESH')
         if len(bpy.context.selected_objects)>=2:
             bpy.ops.object.join()
 
-        bpy.ops.object.editmode_toggle()
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
         try:
             bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE', solver='EXACT')
@@ -53,10 +49,10 @@ class scene2mesh(bpy.types.Operator):
 
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
-        bpy.ops.object.editmode_toggle()
 
         #output mesh data to Octave
         # this works only in object mode,
+        bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         obj = bpy.context.view_layer.objects.active
         verts = []
@@ -71,27 +67,27 @@ class scene2mesh(bpy.types.Operator):
         f = np.array(faces)
         
         # Remove previous .stl file
-        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
-        if not os.path.isdir(in_dir_ply):
-            os.mkdir(in_dir_ply)
+        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        if not os.path.isdir(outputdir):
+            os.mkdir(outputdir)
 
-        lst_ply = os.listdir(in_dir_ply)
+        lst_ply = os.listdir(outputdir)
         c=0
         for item in lst_ply:
             fileName, fileExtension = os.path.splitext(lst_ply[c])
             if fileExtension == ".stl":
-                os.remove(os.path.join(in_dir_ply,item))
-                print ("Delete File: " + os.path.join(in_dir_ply,item))
+                os.remove(os.path.join(outputdir,item))
+                print ("Delete File: " + os.path.join(outputdir,item))
             c=c+1
 
         # Save file
-        scipy.io.savemat(in_dir_ply+'/'+'blendermesh.mat', mdict={'v':v, 'f':f, 'ratio':self.keepratio, 'maxv':self.maxvolum})
-        oc.run(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script/blender2mesh.m')
-        
+        scipy.io.savemat(os.path.join(outputdir,'blendermesh.mat'), mdict={'v':v, 'f':f, 'ratio':self.keepratio, 'maxv':self.maxvolum})
+        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2mesh.m'))
+
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
-        bpy.ops.import_mesh.stl(filepath=in_dir_ply+'/volumic_mesh.stl', files=[{'name': in_dir_ply+'/volumic_mesh.stl'}], directory=in_dir_ply, filter_glob="*.stl")
+        bpy.ops.import_mesh.stl(filepath=os.path.join(outputdir,'volumic_mesh.stl'), files=[{'name': os.path.join(outputdir,'volumic_mesh.stl')}], directory=outputdir, filter_glob="*.stl")
 	
         bpy.context.space_data.shading.type = 'WIREFRAME'
 

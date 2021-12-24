@@ -13,7 +13,7 @@ class runmmc(bpy.types.Operator):
     
     def preparemmc(self):
         oc = op.Oct2Py()
-        oc.addpath(oc.genpath(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script'))
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         ## save optical parameters and light source information
         parameters = [] # mu_a, mu_s, n, g
         light_source = [] # location, direction, photon number, Type,
@@ -34,26 +34,26 @@ class runmmc(bpy.types.Operator):
         light_source.append(obj["unitinmm"])
         light_source = np.array(light_source)
 
-        in_dir_ply = tempfile.gettempdir()+'/iso2mesh-'+os.environ.get('USER')+'/blenderphotonics';
+        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
 
         # Save MMC information
-        scipy.io.savemat(in_dir_ply+'/mmcinfo.mat', mdict={'Optical':parameters, 'light_location':location,'light_direction':direction,'light_info':light_source})
+        scipy.io.savemat(os.path.join(outputdir,'mmcinfo.mat'), mdict={'Optical':parameters, 'light_location':location,'light_direction':direction,'light_info':light_source})
 
         #run MMC
         oc = op.Oct2Py()
         system = platform.system()
 
-        oc.run(bpy.utils.user_resource('SCRIPTS', "addons")+'/BlenderPhotonics/script/blendermmc.m')
-        
+        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blendermmc.m'))
+
         #remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
-        bpy.ops.import_mesh.stl(filepath=in_dir_ply+'/volumic_mesh.stl', files=[{'name': in_dir_ply+'/volumic_mesh.stl'}], directory=in_dir_ply, filter_glob="*.stl")
+        bpy.ops.import_mesh.stl(filepath=os.path.join(outputdir,'volumic_mesh.stl'), files=[{'name': os.path.join(outputdir,'volumic_mesh.stl')}], directory=outputdir, filter_glob="*.stl")
         
         #add color to blender model
         obj = bpy.context.view_layer.objects.active
-        weight_data = scipy.io.loadmat(in_dir_ply+'/fluxlog.mat');
-        order = scipy.io.loadmat(in_dir_ply+'/nodeorder.mat');
+        weight_data = scipy.io.loadmat(os.path.join(outputdir,'fluxlog.mat'));
+        order = scipy.io.loadmat(os.path.join(outputdir,'nodeorder.mat'));
 
         def normalize(x,max,min):
             x=(x-min)/(max-min);
