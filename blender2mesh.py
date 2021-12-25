@@ -6,6 +6,12 @@ import os
 import tempfile
 from .dialogs import ShowMessageBox
 
+g_maxvol=1.0
+g_keepratio=1.0
+g_mergetol=0
+g_dorepair=False
+g_tetgenopt=""
+
 class scene2mesh(bpy.types.Operator):
     bl_label = 'Convert scene to tetra mesh'
     bl_description = "Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)"
@@ -14,8 +20,11 @@ class scene2mesh(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    maxvolum: bpy.props.FloatProperty(default=1.0, name="Maximum tetrahedron volume")
-    keepratio: bpy.props.FloatProperty(default=1.0,name="Percent of edges to be kept (0-1)")
+    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tetrahedron volume")
+    keepratio: bpy.props.FloatProperty(default=g_keepratio,name="Percent of edges to be kept (0-1)")
+    mergetol: bpy.props.FloatProperty(default=g_mergetol,name="Tolerance to merge nodes (0 to disable)")
+    dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
+    tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     def func(self):
         oc = op.Oct2Py()
@@ -81,7 +90,7 @@ class scene2mesh(bpy.types.Operator):
             c=c+1
 
         # Save file
-        scipy.io.savemat(os.path.join(outputdir,'blendermesh.mat'), mdict={'v':v, 'f':f, 'ratio':self.keepratio, 'maxv':self.maxvolum})
+        scipy.io.savemat(os.path.join(outputdir,'blendermesh.mat'), mdict={'v':v, 'f':f, 'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt})
         oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2mesh.m'))
 
         # import volum mesh to blender(just for user to check the result)
@@ -98,3 +107,25 @@ class scene2mesh(bpy.types.Operator):
         print("begin to genert volumic mesh")
         self.func()
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, g_tetgenopt
+        self.maxvol = g_maxvol
+        self.keepratio = g_keepratio
+        self.mergetol = g_mergetol
+        self.dorepair = g_dorepair
+        self.tetgenopt = g_tetgenopt
+        return context.window_manager.invoke_props_dialog(self)
+
+
+#
+#   Dialog to set meshing properties
+#
+class setmeshingprop(bpy.types.Panel):
+    bl_label = "Mesh generation setting"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    def draw(self, context):
+        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, g_tetgenopt
+        self.layout.operator("object.dialog_operator")

@@ -6,7 +6,7 @@ from .niifile import niifile
 from .nii2mesh import nii2mesh
 
 class BlenderPhotonics_UI(bpy.types.Panel):
-    bl_label = 'BlenderPhotonics v0.5'
+    bl_label = 'BlenderPhotonics v0.6'
     bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

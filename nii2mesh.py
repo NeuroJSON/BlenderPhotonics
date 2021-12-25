@@ -4,6 +4,7 @@ import numpy as np
 import scipy.io
 import os
 import tempfile
+from .dialogs import ShowMessageBox
 
 class nii2mesh(bpy.types.Operator):
     bl_label = 'Convert 3-D image file to mesh'
@@ -26,10 +27,11 @@ class nii2mesh(bpy.types.Operator):
             c=c+1
         
         # nii to mesh
-        path = bpy.context.scene.blender_photonics.path
-        if (len(path)==0):
+        niipath = bpy.context.scene.blender_photonics.path
+        print(niipath)
+        if (len(niipath)==0):
             return
-        scipy.io.savemat('niipath.mat', mdict={'path':path})
+        scipy.io.savemat(os.path.join(outputdir,'niipath.mat'), mdict={'niipath':niipath})
 
         oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','nii2mesh.m'))
 
