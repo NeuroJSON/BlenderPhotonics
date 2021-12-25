@@ -1,12 +1,12 @@
 function blendermmc
 
-load(bpmwpath('mmcinfo.mat'));
-load(bpmwpath('meshdata.mat'));
+param=loadjson(bpmwpath('mmcinfo.json'));
+meshdata=load(bpmwpath('meshdata.mat'));
 
 %% Pre-processing data
 propbk = [0,0,1,1];
-Optical_parameter = [propbk;reshape(Optical,[],max(elem(:,5)))'];
-Q=num2cell(light_direction);
+prop = [propbk;reshape(param.prop,[],max(meshdata.elem(:,5)))'];
+Q=num2cell(param.srcdir);
 [w,x,y,z] = Q{:};
 R = [1-2*y^2-2*z^2,2*x*y-2*z*w,2*x*z+2*y*w;
     2*x*y+2*z*w,1-2*x^2-2*z^2,2*y*z-2*x*w;
@@ -14,22 +14,24 @@ R = [1-2*y^2-2*z^2,2*x*y-2*z*w,2*x*z+2*y*w;
 dir = R*[0;0;-1];
 
 %% cfg build
-cfg.nphoton= double(light_info(1));
+cfg.nphoton= double(param.cfg.nphoton);
 cfg.gpuid=-1;
-cfg.unitinmm = light_info(3);
-cfg.node = node;
-cfg.elem = elem(:,1:4);
-cfg.elemprop=elem(:,5);
-cfg.srcpos=light_location;
+cfg.unitinmm = param.cfg.unitinmm;
+cfg.node = meshdata.node;
+cfg.elem = meshdata.elem(:,1:4);
+cfg.elemprop=meshdata.elem(:,5);
+cfg.srcpos=param.srcpos;
 cfg.srcdir= dir';
-cfg.prop= Optical_parameter;
+cfg.prop= prop;
 cfg.tstart=0;
 cfg.tend=5e-9;
 cfg.tstep=5e-9;
 cfg.debuglevel='TP';
-cfg.issaveref=1;  % in addition to volumetric fluence, also save surface diffuse reflectance
+cfg.issaveref=0;
 cfg.method='elem';
 cfg.e0 = '-';
+
+save('-mat7-binary',bpmwpath('mmccfg.mat'),'cfg');
 
 %% run the simulation
 
@@ -40,8 +42,8 @@ flux=mmclab(cfg);
 fluxlog1 = log10(abs(flux.data(1:size(cfg.node,1))));
 min = unique(fluxlog1);
 fluxlog=fluxlog1;
-fluxlog(find(fluxlog1 == -inf)) = min(2);
-save('-mat7-binary',bpmwpath('fluxlog.mat'),'fluxlog'); % flux to log scale and -inf to 0
+fluxlog(isinf(fluxlog1)) = min(2);
+%save('-mat7-binary',bpmwpath('fluxlog.mat'),'fluxlog'); % flux to log scale and -inf to 0
 
 faces = meshface(cfg.elem);
 order = faces';
@@ -51,4 +53,7 @@ nodeorder = order(sort(i));
 % get vetexs order for blender(.stl file to blender will change the order for vertex. If you use .off file can avoid this step. However, you need install .off import add-on first and change the import_mesh.stl to import_mesh.off)
 % In Matlab, commond can be "nodeorder = unique(order,'stable');". Octave do not accept 'stable'
 
-save('-mat7-binary',bpmwpath('nodeorder.mat'),'nodeorder');
+%save('-mat7-binary',bpmwpath('nodeorder.mat'),'nodeorder');
+
+savejson('',struct('logflux',fluxlog(:)','nodeorder',nodeorder(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
+

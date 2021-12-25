@@ -1,9 +1,10 @@
 import bpy
 import oct2py as op
 import numpy as np
-import scipy.io
+import jdata as jd
 import os
 import tempfile
+from .utils import *
 
 class mesh2scene(bpy.types.Operator):
     bl_label = 'Load mesh and setup simulation'
@@ -15,41 +16,32 @@ class mesh2scene(bpy.types.Operator):
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
 
-        
-        # folder path for importing .stl files
+        # folder path for importing .jmsh files
         outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
-        lst_ply = os.listdir(outputdir)
-
-        # Filter file list by valid file types.
-        candidates = []
-        candidates_name = []
-        c=0
-        for item in lst_ply:
-            fileName, fileExtension = os.path.splitext(lst_ply[c])
-            if fileExtension == ".stl" and (not fileName.startswith('volumic_mesh')):
-                candidates.append(item)
-                candidates_name.append(fileName)
-            c=c+1
-
-        file = [{"name":i} for i in candidates]
-        n = len(file)
-        print(n)
+        
+        regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
+        n=len(regiondata.keys())-1
 
         # To import mesh.ply in batches
         for i in range (0,n):
-            bpy.ops.import_mesh.stl(filepath=candidates[i], files=[file[i]], directory=outputdir, filter_glob="*.stl")
-
+            surfkey='MeshSurf('+str(i+1)+')'
+            if(n==1):
+                surfkey='MeshSurf'
+            if (not isinstance(regiondata[surfkey], np.ndarray)):
+                regiondata[surfkey]=np.asarray(regiondata[surfkey],dtype=np.uint32);
+            regiondata[surfkey]-=1
+            AddMeshFromNodeFace(regiondata['MeshNode'],regiondata[surfkey].tolist(),'region_'+str(i+1));
 
         ## add properties
         for obj in bpy.data.objects:
-            obj["mu_a"] = 0.01
-            obj["mu_s"] = 1
+            obj["mua"] = 0.001
+            obj["mus"] = 0.1
             obj["g"] = 0.0
             obj["n"] = 1.37
 
-        ## add light
-        light_data = bpy.data.lights.new(name="light", type='SPOT')
-        light_object = bpy.data.objects.new(name="light", object_data=light_data)
+        ## add source
+        light_data = bpy.data.lights.new(name="source", type='SPOT')
+        light_object = bpy.data.objects.new(name="source", object_data=light_data)
         bpy.context.collection.objects.link(light_object)
         bpy.context.view_layer.objects.active = light_object
         light_object.location = (0, 0, 5)
@@ -57,7 +49,7 @@ class mesh2scene(bpy.types.Operator):
         dg.update()
 
         ## add cfg option
-        obj = bpy.data.objects['light']
+        obj = bpy.data.objects['source']
         obj["nphoton"] = 10000
         obj["unitinmm"] = 1.0
         obj["srctype"] = 1 # pencil:'1'  disk:'2'

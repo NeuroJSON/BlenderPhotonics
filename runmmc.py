@@ -1,10 +1,11 @@
 import bpy
 import oct2py as op
 import numpy as np
-import scipy.io
+import jdata as jd
 import os
 import platform
 import tempfile
+from .utils import *
 
 class runmmc(bpy.types.Operator):
     bl_label = 'Run MMC photon simulation'
@@ -14,30 +15,27 @@ class runmmc(bpy.types.Operator):
     def preparemmc(self):
         oc = op.Oct2Py()
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
-        ## save optical parameters and light source information
+        ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         light_source = [] # location, direction, photon number, Type,
 
         for obj in bpy.data.objects[0:-1]:
-            parameters.append(obj["mu_a"])
-            parameters.append(obj["mu_s"])
-            parameters.append(obj["g"])
-            parameters.append(obj["n"])
-        parameters = np.array(parameters)
+            if(not ("mua" in obj)):
+                continue
+            parameters.append([obj["mua"],obj["mus"],obj["g"],obj["n"]])
 
-        obj = bpy.data.objects['light']
-        location =  np.array(obj.location)
+        obj = bpy.data.objects['source']
+        location =  np.array(obj.location).tolist();
         bpy.context.object.rotation_mode = 'QUATERNION'
-        direction =  np.array(bpy.context.object.rotation_quaternion)
-        light_source.append(obj["nphoton"])
-        light_source.append(obj["srctype"])
-        light_source.append(obj["unitinmm"])
-        light_source = np.array(light_source)
+        direction =  np.array(bpy.context.object.rotation_quaternion).tolist();
+        light_source={'nphoton':obj["nphoton"], 'srctype':obj["srctype"], 'unitinmm':obj["unitinmm"]};
 
         outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        if not os.path.isdir(outputdir):
+            os.makedirs(outputdir)
 
         # Save MMC information
-        scipy.io.savemat(os.path.join(outputdir,'mmcinfo.mat'), mdict={'Optical':parameters, 'light_location':location,'light_direction':direction,'light_info':light_source})
+        jd.save({'prop':parameters,'srcpos':location,'srcdir':direction,'cfg':light_source}, os.path.join(outputdir,'mmcinfo.json'));
 
         #run MMC
         oc = op.Oct2Py()
@@ -48,25 +46,32 @@ class runmmc(bpy.types.Operator):
         #remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
-        bpy.ops.import_mesh.stl(filepath=os.path.join(outputdir,'volumic_mesh.stl'), files=[{'name': os.path.join(outputdir,'volumic_mesh.stl')}], directory=outputdir, filter_glob="*.stl")
+
+        outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'));
+        if (not isinstance(outputmesh['MeshSurf'], np.ndarray)):
+            outputmesh['MeshSurf']=np.asarray(outputmesh['MeshSurf'],dtype=np.uint32);
+        outputmesh['MeshSurf']-=1
+        AddMeshFromNodeFace(outputmesh['MeshNode'],outputmesh['MeshSurf'].tolist(),"Iso2Mesh");
         
         #add color to blender model
-        obj = bpy.context.view_layer.objects.active
-        weight_data = scipy.io.loadmat(os.path.join(outputdir,'fluxlog.mat'));
-        order = scipy.io.loadmat(os.path.join(outputdir,'nodeorder.mat'));
+        obj = bpy.data.objects['Iso2Mesh']
+        mmcoutput=jd.load(os.path.join(outputdir,'mmcoutput.json'));
+        mmcoutput['logflux']=np.asarray(mmcoutput['logflux'], dtype='float32');
 
         def normalize(x,max,min):
             x=(x-min)/(max-min);
             return(x)
 
-        weight_data = normalize(weight_data['fluxlog'], np.max(weight_data['fluxlog']),np.min(weight_data['fluxlog']))
+        weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']),np.min(mmcoutput['logflux']))
 
         new_vertex_group = obj.vertex_groups.new(name='weight')
         vertexs = [vert.co for vert in obj.data.vertices]
         for vert in vertexs:
             ind=vertexs.index(vert)
-            new_vertex_group.add([ind], weight_data[int(order['nodeorder'][ind])-1], 'ADD')
-        bpy.ops.paint.weight_paint_toggle()
+            new_vertex_group.add([ind], weight_data[int(mmcoutput['nodeorder'][ind])-1], 'ADD')
+
+        bpy.context.view_layer.objects.active=obj
+        bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
 
         bpy.context.space_data.shading.type = 'SOLID'
 
@@ -74,6 +79,6 @@ class runmmc(bpy.types.Operator):
         print('''If you prefer a perspective effect，please go to edit mode and make sure shading 'Vertex Group Weight' is on.''')
 
     def execute(self, context):
-        print("Begin to run MMC light transport simulation ...")
+        print("Begin to run MMC source transport simulation ...")
         self.preparemmc()
         return {"FINISHED"}
