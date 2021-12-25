@@ -15,25 +15,44 @@ if(~isempty(regexp(niipath,'^http','match','ignorecase')))
 end
 
 if(~isempty(regexp(niipath,'\.[jb]*nii(\.gz)*$|\.json','match','ignorecase')))
-    test = loadjnifti(niipath);
+    vol = loadjnifti(niipath);
 elseif(~isempty(regexp(niipath,'\.mat$','match','ignorecase')))
     tmp=load(niipath);
     vars=fieldnames(tmp);
     for i=1:length(vars)
         if(ndims(tmp.(vars{i}))==3)
-            test.NIFTIData=tmp.tmp.(vars{i});
+            vol.NIFTIData=tmp.tmp.(vars{i});
             break;
         end
     end
 end
 
-if(exist('opt','var')==0)
-    opt=struct('radbound',5, 'distbound',1);
+opt=struct('radbound',jsonopt('radbound',10,input), 'distbound',jsonopt('distbound',1,input));
+maxvol=jsonopt('maxvol',100,input);
+method=jsonopt('method','cgalmesh',input);
+isovalue=jsonopt('isovalue',0.5,input);
+
+if(strcmp(method,'auto'))
+    labelnum=length(unique(vol.NIFTIData));
+    if(labelnum==2 || labelnum> 64)
+        method='cgalsurf';
+    else
+        method='cgalmesh';
+    end
+    if(strcmp(method,'cgalmesh') && labelnum>64)
+        vol.NIFTIData=uint8(vol.NIFTIData>isovalue);
+    end
 end
 
-[node,elem,face]=vol2mesh(test.NIFTIData,1:size(test.NIFTIData,1),1:size(test.NIFTIData,2),1:size(test.NIFTIData,3),opt,100,1,'cgalmesh');
+if(strcmp(method,'cgalmesh'))
+    vol.NIFTIData=uint8(vol.NIFTIData);
+    isovalue=[];
+end
+
+[node,elem,face]=v2m(vol.NIFTIData,isovalue,opt,maxvol,method);
+
 %% post processing, scale mesh with the voxel size 0.1 mm
-node(:,4)=[];
+
 elem(:,1:4)=meshreorient(node(:,1:3),elem(:,1:4));
 save('-mat7-binary',bpmwpath('niimesh.mat'),'node','elem','face');
 

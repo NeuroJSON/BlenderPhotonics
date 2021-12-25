@@ -1,7 +1,6 @@
 function blender2mesh
 
 blender=loadjson(bpmwpath('blendermesh.json'));
-blender
 
 if(blender.mergetol>0)
     [blender.v, blender.f]=removedupnodes(blender.v, blender.f, blender.mergetol);
