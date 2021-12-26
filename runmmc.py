@@ -67,7 +67,7 @@ class runmmc(bpy.types.Operator):
         vertexs = [vert.co for vert in obj.data.vertices]
         for vert in vertexs:
             ind=vertexs.index(vert)
-            new_vertex_group.add([ind], weight_data[int(mmcoutput['nodeorder'][ind])-1], 'ADD')
+            new_vertex_group.add([ind], weight_data[int(ind)-1], 'ADD')
 
         bpy.context.view_layer.objects.active=obj
         bpy.ops.object.mode_set(mode='WEIGHT_PAINT')

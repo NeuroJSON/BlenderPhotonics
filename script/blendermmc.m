@@ -43,17 +43,7 @@ fluxlog1 = log10(abs(flux.data(1:size(cfg.node,1))));
 min = unique(fluxlog1);
 fluxlog=fluxlog1;
 fluxlog(isinf(fluxlog1)) = min(2);
-%save('-mat7-binary',bpmwpath('fluxlog.mat'),'fluxlog'); % flux to log scale and -inf to 0
 
-faces = meshface(cfg.elem);
-order = faces';
-order = order(:);
-[~,i,~] = unique(order,'first');
-nodeorder = order(sort(i));
-% get vetexs order for blender(.stl file to blender will change the order for vertex. If you use .off file can avoid this step. However, you need install .off import add-on first and change the import_mesh.stl to import_mesh.off)
-% In Matlab, commond can be "nodeorder = unique(order,'stable');". Octave do not accept 'stable'
 
-%save('-mat7-binary',bpmwpath('nodeorder.mat'),'nodeorder');
-
-savejson('',struct('logflux',fluxlog(:)','nodeorder',nodeorder(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
+savejson('',struct('logflux',fluxlog(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
 
