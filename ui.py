@@ -6,7 +6,7 @@ from .niifile import niifile
 from .nii2mesh import nii2mesh
 
 class BlenderPhotonics_UI(bpy.types.Panel):
-    bl_label = 'BlenderPhotonics v0.6'
+    bl_label = 'BlenderPhotonics v2022'
     bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -21,9 +21,18 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         bp = scene.blender_photonics
+        layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
+        colb2m = layout.column()
+        colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
+        layout.separator()
+        layout.label(text="Volume2Mesh", icon='SHADING_SOLID')
         layout.prop(bp, "path")
-        col = layout.column()
-        col.operator(nii2mesh.bl_idname,icon='MESH_GRID')
-        col.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
-        col.operator(mesh2scene.bl_idname,icon='EDITMODE_HLT')
-        col.operator(runmmc.bl_idname,icon='LIGHT_AREA')
+        colv2m = layout.column()
+        colv2m.operator(nii2mesh.bl_idname,icon='MESH_GRID')
+        layout.separator()
+        layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
+        layout.separator()
+        layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
+        colmmc = layout.column()
+        colmmc.operator(mesh2scene.bl_idname,icon='EDITMODE_HLT')
+        colmmc.operator(runmmc.bl_idname,icon='LIGHT_AREA')
