@@ -1,5 +1,5 @@
 import bpy
-import oct2py as op
+import matlab.engine
 import numpy as np
 import jdata as jd
 import os
@@ -12,8 +12,8 @@ class runmmc(bpy.types.Operator):
     bl_idname = 'blenderphotonics.runmmc'
     
     def preparemmc(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        eng = matlab.engine.start_matlab()
+        #eng.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         light_source = [] # location, direction, photon number, Type,
@@ -37,10 +37,9 @@ class runmmc(bpy.types.Operator):
         jd.save({'prop':parameters,'srcpos':location,'srcdir':direction,'cfg':light_source}, os.path.join(outputdir,'mmcinfo.json'));
 
         #run MMC
-        oc = op.Oct2Py()
         system = platform.system()
 
-        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blendermmc.m'))
+        eng.blendermmc(nargout=0)
 
         #remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')
@@ -67,7 +66,7 @@ class runmmc(bpy.types.Operator):
         vertexs = [vert.co for vert in obj.data.vertices]
         for vert in vertexs:
             ind=vertexs.index(vert)
-            new_vertex_group.add([ind], weight_data[int(ind)-1], 'ADD')
+            new_vertex_group.add([ind], weight_data[int(mmcoutput['nodeorder'][ind])-1], 'ADD')
 
         bpy.context.view_layer.objects.active=obj
         bpy.ops.object.mode_set(mode='WEIGHT_PAINT')

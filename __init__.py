@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "BlenderPhotonics",
+    "name": "BlenderPhotonics_Matlab",
     "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
     "version": (1, 0),  # min plug-in version
     "blender": (2, 82, 0),  # min blender version
