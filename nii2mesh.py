@@ -3,7 +3,6 @@ import oct2py as op
 import numpy as np
 import jdata as jd
 import os
-import tempfile
 from .utils import *
 
 g_maxvol=100
@@ -33,7 +32,7 @@ class nii2mesh(bpy.types.Operator):
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         # Remove last .jmsh file
-        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        outputdir = GetBPWorkFolder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
         if(os.path.exists(os.path.join(outputdir,'regionmesh.jmsh'))):

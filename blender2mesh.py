@@ -3,7 +3,6 @@ import oct2py as op
 import numpy as np
 import jdata as jd
 import os
-import tempfile
 from .utils import *
 
 g_maxvol=1.0
@@ -30,7 +29,7 @@ class scene2mesh(bpy.types.Operator):
         oc = op.Oct2Py()
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
-        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 

@@ -1,5 +1,6 @@
 import bpy
-
+import os
+import tempfile
 
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
@@ -26,3 +27,9 @@ def AddMeshFromNodeFace(node,face,name):
     # Create object using blender function
     my_mesh.from_pydata(node,[],face)
     my_mesh.update(calc_edges=True)
+
+def GetBPWorkFolder():
+    if os.name == 'nt':
+        return os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('UserName'),'blenderphotonics')
+    else:
+        return os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics')

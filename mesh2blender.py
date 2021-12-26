@@ -3,7 +3,6 @@ import oct2py as op
 import numpy as np
 import jdata as jd
 import os
-import tempfile
 from .utils import *
 
 class mesh2scene(bpy.types.Operator):
@@ -17,7 +16,7 @@ class mesh2scene(bpy.types.Operator):
         bpy.ops.object.delete()
 
         # folder path for importing .jmsh files
-        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        outputdir = GetBPWorkFolder();
         
         regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
         n=len(regiondata.keys())-1

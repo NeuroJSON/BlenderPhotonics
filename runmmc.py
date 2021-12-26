@@ -4,7 +4,6 @@ import numpy as np
 import jdata as jd
 import os
 import platform
-import tempfile
 from .utils import *
 
 class runmmc(bpy.types.Operator):
@@ -30,7 +29,7 @@ class runmmc(bpy.types.Operator):
         direction =  np.array(bpy.context.object.rotation_quaternion).tolist();
         light_source={'nphoton':obj["nphoton"], 'srctype':obj["srctype"], 'unitinmm':obj["unitinmm"]};
 
-        outputdir = os.path.join(tempfile.gettempdir(),'iso2mesh-'+os.environ.get('USER'),'blenderphotonics');
+        outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 
