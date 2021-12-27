@@ -40,7 +40,8 @@ Installation
     3. If your system's python3 is different from Blender's built-in version, you need to install the matching
        version via your package management system, such as `sudo apt-get install python3.x` - here "3.x" must
        match what you saw in the Blender's scripting window.
-    4. cd to `/matlabroot/extern/engines/python` and type `python setup.py install`, then you can go back to blender *Scripting* tab and type `import matlab.engine`
+    4. check Versions of Python Compatible with MATLAB Products by Release from Mathwork: https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf
+    5. cd to `/matlabroot/extern/engines/python` and type `python setup.py install`, then you can go back to blender *Scripting* tab and type `import matlab.engine`
 3. Download and unzip Iso2Mesh from http://github.com/fangq/iso2mesh to a work folder
 4. Download and unzip MMCLAB from http://mcx.space/nightly/ to a work folder
 5. Download and Unzip BlenderPhotonics-Matlab from Github: https://github.com/COTILab/BlenderPhotonics/tree/BlenderPhotonics-Matlab
