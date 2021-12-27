@@ -31,7 +31,7 @@ cfg.issaveref=0;
 cfg.method='elem';
 cfg.e0 = '-';
 
-save('-mat7-binary',bpmwpath('mmccfg.mat'),'cfg');
+save(bpmwpath('mmccfg.mat'),'cfg');
 
 %% run the simulation
 
