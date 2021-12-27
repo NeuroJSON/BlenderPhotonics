@@ -24,15 +24,29 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
         colb2m = layout.column()
         colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
+
         layout.separator()
         layout.label(text="Volume2Mesh", icon='SHADING_SOLID')
         layout.prop(bp, "path")
         colv2m = layout.column()
         colv2m.operator(nii2mesh.bl_idname,icon='MESH_GRID')
+
         layout.separator()
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
+
         layout.separator()
         layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
+
         colmmc = layout.column()
         colmmc.operator(mesh2scene.bl_idname,icon='EDITMODE_HLT')
         colmmc.operator(runmmc.bl_idname,icon='LIGHT_AREA')
+
+        layout.separator()
+        layout.label(text="Tutorials and Websites", icon='SHADING_SOLID')
+        colurl = layout.column()
+        op=colurl.operator('wm.url_open', text='Iso2Mesh Wiki',icon='URL')
+        op.url='http://iso2mesh.sf.net'
+        op=colurl.operator('wm.url_open', text='MMC tutorials',icon='URL')
+        op.url='http://mcx.space/wiki/?Learn#mmc'
+        op=colurl.operator('wm.url_open', text='Brain2Mesh homepage',icon='URL')
+        op.url='http://mcx.space/brain2mesh'

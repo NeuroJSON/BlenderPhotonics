@@ -9,6 +9,8 @@ g_maxvol=1.0
 g_keepratio=1.0
 g_mergetol=0
 g_dorepair=False
+g_onlysurf=False
+g_convtri=True
 g_tetgenopt=""
 
 class scene2mesh(bpy.types.Operator):
@@ -23,6 +25,8 @@ class scene2mesh(bpy.types.Operator):
     keepratio: bpy.props.FloatProperty(default=g_keepratio,name="Percent of edges to be kept (0-1)")
     mergetol: bpy.props.FloatProperty(default=g_mergetol,name="Tolerance to merge nodes (0 to disable)")
     dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
+    onlysurf: bpy.props.BoolProperty(default=g_onlysurf,name="Return triangular surface mesh only (no tetrahedral mesh)")
+    convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     def func(self):
@@ -42,14 +46,22 @@ class scene2mesh(bpy.types.Operator):
         for ob in bpy.context.scene.objects:
             ob.select_set(False)
             print(ob.type)
-            if ob.type == 'CAMERA' or ob.type == 'LIGHT':
+            if ob.type == 'CAMERA' or ob.type == 'LIGHT' or ob.type == 'EMPTY' or ob.type == 'LAMP' or ob.type == 'SPEAKER':
                 ob.select_set(True)
 
         bpy.ops.object.delete()
 
         obj = bpy.context.view_layer.objects.active
+
+        if(not self.convtri):
+            bpy.ops.object.select_by_type(type='MESH')
+            bpy.ops.object.select_all(action='INVERT')
+        else:
+            bpy.ops.object.select_all(action='SELECT')
+        if len(bpy.context.selected_objects)>=1:
+            bpy.ops.object.convert(target='MESH')
+
         bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.convert(target='MESH')
         if len(bpy.context.selected_objects)>=2:
             bpy.ops.object.join()
 
@@ -63,8 +75,9 @@ class scene2mesh(bpy.types.Operator):
             bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
             print("use fast intersection solver")
 
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+        if(self.convtri):
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
         #output mesh data to Octave
         # this works only in object mode,
@@ -77,13 +90,15 @@ class scene2mesh(bpy.types.Operator):
             v_global = obj.matrix_world @ vert
             verts.append(v_global)
         edges = [edge.vertices[:] for edge in obj.data.edges]
-        faces = [face.vertices[:] for face in obj.data.polygons]
-
+        faces = [(np.array(face.vertices[:])+1).tolist() for face in obj.data.polygons]
         v = np.array(verts)
-        f = np.array(faces)
+        if(self.convtri):
+            f = np.array(faces)
+        else:
+            f = faces
 
         # Save file
-        meshdata={'v':v, 'f':f+1, 'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}
+        meshdata={'MeshNode':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
         jd.save(meshdata,os.path.join(outputdir,'blendermesh.json'))
         oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2mesh.m'))
 
@@ -91,13 +106,16 @@ class scene2mesh(bpy.types.Operator):
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
 
-        outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'));
-        if (not isinstance(outputmesh['MeshSurf'], np.ndarray)):
-            outputmesh['MeshSurf']=np.asarray(outputmesh['MeshSurf'],dtype=np.uint32);
-        outputmesh['MeshSurf']-=1
-        AddMeshFromNodeFace(outputmesh['MeshNode'],outputmesh['MeshSurf'].tolist(),"Iso2Mesh");
-
-        bpy.context.view_layer.objects.active=bpy.data.objects['Iso2Mesh']
+        if(not self.onlysurf):
+            outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'))
+            LoadTetMesh(outputmesh,'Iso2Mesh')
+            bpy.context.view_layer.objects.active=bpy.data.objects['Iso2Mesh']
+        else:
+            regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'))
+            if(len(regiondata.keys())>0):
+                LoadReginalMesh(regiondata,'region_')
+                bpy.context.view_layer.objects.active=bpy.data.objects['region_1']
+        
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
         ShowMessageBox("Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'", "BlenderPhotonics")
@@ -113,6 +131,8 @@ class scene2mesh(bpy.types.Operator):
         self.keepratio = g_keepratio
         self.mergetol = g_mergetol
         self.dorepair = g_dorepair
+        self.onlysurf = g_onlysurf
+        self.convtri = g_convtri
         self.tetgenopt = g_tetgenopt
         return context.window_manager.invoke_props_dialog(self)
 
@@ -126,5 +146,5 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, g_tetgenopt
+        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, onlysurf, g_convtri, g_tetgenopt
         self.layout.operator("object.dialog_operator")

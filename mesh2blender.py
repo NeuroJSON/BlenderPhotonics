@@ -19,17 +19,7 @@ class mesh2scene(bpy.types.Operator):
         outputdir = GetBPWorkFolder();
         
         regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
-        n=len(regiondata.keys())-1
-
-        # To import mesh.ply in batches
-        for i in range (0,n):
-            surfkey='MeshSurf('+str(i+1)+')'
-            if(n==1):
-                surfkey='MeshSurf'
-            if (not isinstance(regiondata[surfkey], np.ndarray)):
-                regiondata[surfkey]=np.asarray(regiondata[surfkey],dtype=np.uint32);
-            regiondata[surfkey]-=1
-            AddMeshFromNodeFace(regiondata['MeshNode'],regiondata[surfkey].tolist(),'region_'+str(i+1));
+        LoadReginalMesh(regiondata,'region_');
 
         ## add properties
         for obj in bpy.data.objects:
