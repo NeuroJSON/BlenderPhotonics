@@ -10,3 +10,10 @@ class niifile(PropertyGroup):
         maxlen=2048,
         subtype='FILE_PATH'
         )
+    surffile: StringProperty(
+        name = "JMesh File",
+        description="Accept triangular surfaces stored in JSON-based JMesh (.jmsh/.bmsh, see http://neurojson.org), OFF, STL, ASC, SMF, and GTS",
+        default="",
+        maxlen=2048,
+        subtype='FILE_PATH'
+        )

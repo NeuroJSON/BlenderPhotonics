@@ -11,11 +11,11 @@ class BlenderPhotonics_UI(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "BlenderPhotonics"
-    bl_context = "objectmode"
+    #bl_context = "objectmode"
 
     @classmethod
     def poll(self,context):
-        return context.object is not None
+        return context.mode in {'EDIT_MESH','OBJECT','PAINT_WEIGHT'}
 
     def draw(self, context):
         layout = self.layout
@@ -33,10 +33,12 @@ class BlenderPhotonics_UI(bpy.types.Panel):
 
         layout.separator()
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
+        layout.prop(bp, "surffile")
+        cols2m = layout.column()
+        cols2m.operator(nii2mesh.bl_idname,icon='MESH_GRID')
 
         layout.separator()
         layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
-
         colmmc = layout.column()
         colmmc.operator(mesh2scene.bl_idname,icon='EDITMODE_HLT')
         colmmc.operator(runmmc.bl_idname,icon='LIGHT_AREA')
