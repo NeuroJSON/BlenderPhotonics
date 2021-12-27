@@ -3,6 +3,7 @@ import oct2py as op
 import numpy as np
 import jdata as jd
 import os
+from bpy.utils import register_class, unregister_class
 from .utils import *
 
 g_maxvol=1.0
@@ -11,6 +12,7 @@ g_mergetol=0
 g_dorepair=False
 g_onlysurf=False
 g_convtri=True
+g_endstep='9'
 g_tetgenopt=""
 
 class scene2mesh(bpy.types.Operator):
@@ -27,6 +29,14 @@ class scene2mesh(bpy.types.Operator):
     dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
     onlysurf: bpy.props.BoolProperty(default=g_onlysurf,name="Return triangular surface mesh only (no tetrahedral mesh)")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
+    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run until step", 
+                                    items = [('1','Step 1: Convert obj to mesh','Step 1'), 
+                                             ('2','Step 2: Join all objects','Step 2'), 
+                                             ('3','Step 3: Intersect objects','Step 3'), 
+                                             ('4','Step 4: Convert to triangles','Step 4'), 
+                                             ('5','Step 5: Export to JMesh','Step 5'), 
+                                             ('6','Step 6: Run Iso2Mesh and load mesh','Step 6'),
+                                             ('9','Run run steps','Run all steps')])
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     def func(self):
@@ -61,9 +71,17 @@ class scene2mesh(bpy.types.Operator):
         if len(bpy.context.selected_objects)>=1:
             bpy.ops.object.convert(target='MESH')
 
+        # at this point, objects are converted to mesh if possible
+        if(int(self.endstep)<2):
+            return
+
         bpy.ops.object.select_all(action='SELECT')
         if len(bpy.context.selected_objects)>=2:
             bpy.ops.object.join()
+
+        # at this point, objects are jointed
+        if(int(self.endstep)<3):
+            return
 
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='EDIT')
@@ -75,9 +93,17 @@ class scene2mesh(bpy.types.Operator):
             bpy.ops.mesh.intersect(mode='SELECT', separate_mode='NONE')
             print("use fast intersection solver")
 
+        # at this point, overlapping objects are intersected
+        if(int(self.endstep)<4):
+            return
+
         if(self.convtri):
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+
+        # at this point, if enabled, surfaces are converted to triangular meshes
+        if(int(self.endstep)<5):
+            return
 
         #output mesh data to Octave
         # this works only in object mode,
@@ -100,6 +126,14 @@ class scene2mesh(bpy.types.Operator):
         # Save file
         meshdata={'MeshNode':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
         jd.save(meshdata,os.path.join(outputdir,'blendermesh.json'))
+
+        if(int(self.endstep)==5):
+            bpy.ops.blender2mesh.invoke_saveas('INVOKE_DEFAULT')
+
+        # at this point, all mesh objects are saved to a jmesh file under work-dir as blendermesh.json
+        if(int(self.endstep)<6):
+            return
+
         oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2mesh.m'))
 
         # import volum mesh to blender(just for user to check the result)
@@ -118,10 +152,14 @@ class scene2mesh(bpy.types.Operator):
         
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
+        # at this point, if successful, iso2mesh generated mesh objects are imported into blender
+        if(int(self.endstep)<7):
+            return
+
         ShowMessageBox("Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'", "BlenderPhotonics")
 
     def execute(self, context):
-        print("begin to genert volumic mesh")
+        print("begin to generate mesh")
         self.func()
         return {"FINISHED"}
 
@@ -146,5 +184,24 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, onlysurf, g_convtri, g_tetgenopt
+        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, onlysurf, g_convtri, g_tetgenopt, g_endstep
         self.layout.operator("object.dialog_operator")
+
+# This operator will open Blender's file chooser when invoked
+# and store the selected filepath in self.filepath and print it
+# to the console using window_manager.fileselect_add()
+class BLENDER2MESH_OT_invoke_saveas(bpy.types.Operator):
+    bl_idname = "blender2mesh.invoke_saveas"
+    bl_label = "Export scene in a JMesh/JSON universal exchange file"
+
+    filepath: bpy.props.StringProperty(subtype='DIR_PATH')
+
+    def execute(self, context):
+        print(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+        
+register_class(BLENDER2MESH_OT_invoke_saveas)

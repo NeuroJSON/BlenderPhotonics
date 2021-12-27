@@ -24,6 +24,8 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
         colb2m = layout.column()
         colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
+        colb2m.operator(scene2mesh.bl_idname,text='Export scene to JMesh/JSON',icon='MESH_ICOSPHERE').endstep='5'
+        colb2m.operator(scene2mesh.bl_idname,text='Merge objects only',icon='MESH_ICOSPHERE').endstep='4'
 
         layout.separator()
         layout.label(text="Volume2Mesh", icon='SHADING_SOLID')
@@ -35,7 +37,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
         layout.prop(bp, "surffile")
         cols2m = layout.column()
-        cols2m.operator(nii2mesh.bl_idname,icon='MESH_GRID')
+        cols2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
 
         layout.separator()
         layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
