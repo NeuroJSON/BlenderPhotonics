@@ -1,5 +1,5 @@
 
-BlenderPhotonics
+BlenderPhotonics-Matlab
 ========================
 
 - Author: Yuxuan Zhang (zhang.yuxuan1 at northeastern.edu) and Qianqian Fang (q.fang at neu.edu)
