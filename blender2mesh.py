@@ -29,15 +29,27 @@ class scene2mesh(bpy.types.Operator):
     dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
     onlysurf: bpy.props.BoolProperty(default=g_onlysurf,name="Return triangular surface mesh only (no tetrahedral mesh)")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
-    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run until step", 
+    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", 
                                     items = [('1','Step 1: Convert obj to mesh','Step 1'), 
                                              ('2','Step 2: Join all objects','Step 2'), 
                                              ('3','Step 3: Intersect objects','Step 3'), 
                                              ('4','Step 4: Convert to triangles','Step 4'), 
                                              ('5','Step 5: Export to JMesh','Step 5'), 
                                              ('6','Step 6: Run Iso2Mesh and load mesh','Step 6'),
-                                             ('9','Run run steps','Run all steps')])
+                                             ('9','Run all steps','Run all steps')])
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
+
+    @classmethod
+    def description(cls, context, properties):
+        hints={'1': 'Convert obj to mesh', 
+               '2': 'Join all objects',
+               '3': 'Intersect objects',
+               '4': 'Merge all visible objects, perform intersection and convert to N-gon or triangular mesh',
+               '5': 'Export the scene to a human-readable universal data exchange file encoded in the JSON format based on the JMesh specification (see http://neurojson.org)',
+               '6': 'Output tetrahedral mesh using Iso2Mesh (http://iso2mesh.sf.net)',
+               '9': 'Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)'
+               }
+        return hints[properties.endstep]
 
     def func(self):
         oc = op.Oct2Py()
@@ -124,8 +136,9 @@ class scene2mesh(bpy.types.Operator):
             f = faces
 
         # Save file
-        meshdata={'MeshNode':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
-        jd.save(meshdata,os.path.join(outputdir,'blendermesh.json'))
+        meshdata={'_DataInfo_': {'JMeshVersion': '0.5', 'Comment':'Created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)'},
+            'MeshNode':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
+        jd.save(meshdata,os.path.join(outputdir,'blendermesh.jmsh',indent=4))
 
         if(int(self.endstep)==5):
             bpy.ops.blender2mesh.invoke_saveas('INVOKE_DEFAULT')
@@ -194,10 +207,15 @@ class BLENDER2MESH_OT_invoke_saveas(bpy.types.Operator):
     bl_idname = "blender2mesh.invoke_saveas"
     bl_label = "Export scene in a JMesh/JSON universal exchange file"
 
-    filepath: bpy.props.StringProperty(subtype='DIR_PATH')
+    filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
 
     def execute(self, context):
         print(self.filepath)
+        if(not (self.filepath == "")):
+            if os.name == 'nt':
+                os.popen("copy '"+os.path.join(GetBPWorkFolder(),'blendermesh.jmsh')+"' '"+self.filepath+"'");
+            else:
+                os.popen("cp '"+os.path.join(GetBPWorkFolder(),'blendermesh.jmsh')+"' '"+self.filepath+"'");
         return {'FINISHED'}
 
     def invoke(self, context, event):
