@@ -10,6 +10,22 @@ def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
+def GetNodeFacefromObject(obj, istrimesh=True):
+    verts = []
+    for n in range(len(obj.data.vertices)):
+        vert = obj.data.vertices[n].co
+        v_global = obj.matrix_world @ vert
+        verts.append(v_global)
+    #edges = [edge.vertices[:] for edge in obj.data.edges]
+    faces = [(np.array(face.vertices[:])+1).tolist() for face in obj.data.polygons]
+    v = np.array(verts)
+    try:
+        f = np.array(faces)
+        return {'MeshNode':v, 'MeshSurf':f}
+    except:
+        f = faces
+    return {'MeshNode':v, 'MeshPoly':f}
+
 def AddMeshFromNodeFace(node,face,name):
 
     # Create mesh and related object

@@ -4,6 +4,7 @@ from .mesh2blender import mesh2scene
 from .runmmc import runmmc
 from .niifile import niifile
 from .nii2mesh import nii2mesh
+from .obj2surf import object2surf
 
 class BlenderPhotonics_UI(bpy.types.Panel):
     bl_label = 'BlenderPhotonics v2022'
@@ -24,8 +25,8 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
         colb2m = layout.column()
         colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE').endstep='9'
-        colb2m.operator(scene2mesh.bl_idname,text='Export scene to JMesh/JSON',icon='MESH_ICOSPHERE').endstep='5'
-        colb2m.operator(scene2mesh.bl_idname,text='Merge objects only',icon='MESH_ICOSPHERE').endstep='4'
+        colb2m.operator(scene2mesh.bl_idname,text='Export scene to JMesh/JSON',icon='FILE_TICK').endstep='5'
+        colb2m.operator(scene2mesh.bl_idname,text='Merge objects only',icon='MOD_BOOLEAN').endstep='4'
 
         layout.separator()
         layout.label(text="Volume2Mesh", icon='SHADING_SOLID')
@@ -37,7 +38,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
         layout.prop(bp, "surffile")
         cols2m = layout.column()
-        cols2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE')
+        cols2m.operator(object2surf.bl_idname,icon='SURFACE_DATA').action='export'
 
         layout.separator()
         layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
@@ -54,3 +55,4 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         op.url='http://mcx.space/wiki/?Learn#mmc'
         op=colurl.operator('wm.url_open', text='Brain2Mesh homepage',icon='URL')
         op.url='http://mcx.space/brain2mesh'
+        layout.label(text="Funded by NIH R01-GM114365 & U24-NS124027", icon='HEART')
