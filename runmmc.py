@@ -40,7 +40,8 @@ class runmmc(bpy.types.Operator):
 
         # run MMC
         system = platform.system()
-
+        eng.blendermmc(nargout=0)
+        
         # remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
