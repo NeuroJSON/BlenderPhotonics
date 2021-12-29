@@ -14,7 +14,7 @@ g_action='repair'
 class object2surf(bpy.types.Operator):
     bl_label = 'Selected objects to surfaces'
     bl_description = "Create surface meshes from selected objects and refine (smoothing, refine, Boolean, repair and simplification)"
-    bl_idname = 'blenderphotonics.object2surf'
+    bl_idname = 'blenderphotonics.blender2surf'
 
     # creat a interface to set uesrs' model parameter.
 
@@ -135,8 +135,8 @@ class setmeshingprop(bpy.types.Panel):
 # This operator will open Blender's file chooser when invoked
 # and store the selected filepath in self.filepath and print it
 # to the console using window_manager.fileselect_add()
-class OBJ2SURF_OT_invoke_export(bpy.types.Operator):
-    bl_idname = "obj2surf.invoke_export"
+class OBJECT2SURF_OT_invoke_export(bpy.types.Operator):
+    bl_idname = "object2surf.invoke_export"
     bl_label = "Export scene in a JMesh/JSON universal exchange file"
 
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
@@ -154,14 +154,14 @@ class OBJ2SURF_OT_invoke_export(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
         
-register_class(OBJ2SURF_OT_invoke_export)
+register_class(OBJECT2SURF_OT_invoke_export)
 
 
 # This operator will open Blender's file chooser when invoked
 # and store the selected filepath in self.filepath and print it
 # to the console using window_manager.fileselect_add()
-class OBJ2SURF_OT_invoke_import(bpy.types.Operator):
-    bl_idname = "obj2surf.invoke_import"
+class OBJECT2SURF_OT_invoke_import(bpy.types.Operator):
+    bl_idname = "object2surf.invoke_import"
     bl_label = "Import object surface mesh in a JMesh/JSON universal exchange file"
 
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
