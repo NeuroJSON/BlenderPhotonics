@@ -14,7 +14,7 @@ end
 if(~isempty(regexp(blender.param.action,'smooth')))
     for i=1:length(objs)
         if(~iscell(objs(i).MeshSurf))
-            objs(i).MeshNode=sms(objs(i).MeshNode, objs(i).MeshSurf, blender.param.actionlevel);
+            objs(i).MeshNode=sms(objs(i).MeshNode, objs(i).MeshSurf, blender.param.level);
         end
     end
 end
@@ -30,7 +30,7 @@ end
 if(~isempty(regexp(blender.param.action,'simplify')))
     for i=1:length(objs)
         if(~iscell(objs(i).MeshSurf))
-            [objs(i).MeshNode, objs(i).MeshSurf]=meshresample(objs(i).MeshNode, objs(i).MeshSurf, blender.param.actionlevel);
+            [objs(i).MeshNode, objs(i).MeshSurf]=meshresample(objs(i).MeshNode, objs(i).MeshSurf, blender.param.level);
         end
     end
 end

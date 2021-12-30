@@ -7,10 +7,23 @@ from bpy.utils import register_class, unregister_class
 from .utils import *
 
 g_action='repair'
-g_actionparam=0
+g_actionparam=1.0
 g_convtri=True
 g_tetgenopt=""
-
+enum_action=[('import','Import surface mesh from file','Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'),
+       ('export','Export selected to JSON/JMesh','Export selected objects to JSON/JMesh exchange file'),
+       ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both meshes, with each surface intersected by the other'),
+       ('boolean-first','Boolean-first: 1st mesh sliced by the 2nd','Return the first mesh but sliced by the 2nd surface'),
+       ('boolean-second','Boolean-second: 2nd mesh sliced by the 1st','Keep the second mesh but sliced by the 1st surface'),
+       ('boolean-diff','Boolean-diff: Space in either object alone','Return the surface of the differential space'),
+       ('boolean-and','Boolean-and: Space in both objects','Return the surface of space that are overlapping between the two objects'),
+       ('boolean-or','Boolean-or: Space for joint/union space','The outer surface of the joint object space'),
+       ('boolean-decouple','Boolean-decouple: Decouple two shell meshes','Insert a small gap between two touched objects'),
+       ('simplify','Surface simplification', 'Surface simplification'),
+       ('remesh','Remove badly shaped triangles', 'Remesh surface and remove badly shaped triangles'),
+       ('smooth','Smooth selected mesh object','Smooth selected mesh object'),
+       ('reorient','Reorient all triangles','Reorient all triangles in counter-clockwise'),
+       ('repair','Fix self-intersection and holes','Fix self-intersection and holes by calling meshfix')]
 
 class object2surf(bpy.types.Operator):
     bl_label = 'Selected objects to surfaces'
@@ -20,42 +33,16 @@ class object2surf(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    action: bpy.props.EnumProperty(default=g_action, name="Operation",
-                                    items = [('import','Import surface mesh from file','Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'),
-                                             ('export','Export selected to JSON/JMesh','Export selected objects to JSON/JMesh exchange file'),
-                                             ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both meshes, with each surface intersected by the other'),
-                                             ('boolean-first','Boolean-first: 1st mesh sliced by the 2nd','Return the first mesh but sliced by the 2nd surface'),
-                                             ('boolean-second','Boolean-second: 2nd mesh sliced by the 1st','Keep the second mesh but sliced by the 1st surface'),
-                                             ('boolean-diff','Boolean-diff: Space in either object alone','Return the surface of the differential space'),
-                                             ('boolean-and','Boolean-and: Space in both objects','Return the surface of space that are overlapping between the two objects'),
-                                             ('boolean-or','Boolean-or: Space for joint/union space','The outer surface of the joint object space'),
-                                             ('boolean-decouple','Boolean-decouple: Decouple two shell meshes','Insert a small gap between two touched objects'),
-                                             ('simplify','Surface simplification', 'Surface simplification'),
-                                             ('remesh','Remove badly shaped triangles', 'Remesh surface and remove badly shaped triangles'),
-                                             ('smooth','Smooth selected mesh object','Smooth selected mesh object'),
-                                             ('reorient','Reorient all triangles','Reorient all triangles in counter-clockwise'),
-                                             ('repair','Fix self-intersection and holes','Fix self-intersection and holes by calling meshfix')])
+    action: bpy.props.EnumProperty(default=g_action, name="Operation", items = enum_action)
     actionparam: bpy.props.FloatProperty(default=0, name="Operation parameter")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     @classmethod
     def description(cls, context, properties):
-        hints={'import':'Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender',
-               'export':'Export selected objects to JSON/JMesh exchange file',
-               'boolean-resolve':'Output both meshes, with each surface intersected by the other',
-               'boolean-first':'Return the first mesh but sliced by the 2nd surface',
-               'boolean-second':'Keep the second mesh but sliced by the 1st surface',
-               'boolean-diff':'Return the surface of the differential space',
-               'boolean-and':'Return the surface of space that are overlapping between the two objects',
-               'boolean-or':'The outer surface of the joint object space',
-               'boolean-decouple':'Insert a small gap between two touched objects',
-               'simplify':'Surface simplification', 'Surface simplification'
-               'remesh':'Remove badly shaped triangles', 'Remesh surface and remove badly shaped triangles'
-               'smooth':'Smooth selected mesh object',
-               'reorient':'Reorient all triangles in counter-clockwise',
-               'repair':'Fix self-intersection and holes by calling meshfix'
-               }
+        hints={}
+        for item in enum_action:
+            hints[item[0]]=item[2]
         return hints[properties.action]
 
     def func(self):
@@ -91,7 +78,7 @@ class object2surf(bpy.types.Operator):
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        surfdata={'_DataInfo_': {'JMeshVersion': '0.5', 'Comment':'Object surface mesh created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)'}};
+        surfdata={'_DataInfo_': {'JMeshVersion': '0.5', 'Comment':'Object surface mesh created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)'}}
         surfdata['MeshGroup']=[]
         for ob in bpy.context.selected_objects:
             objsurf=GetNodeFacefromObject(ob, self.convtri)
@@ -115,13 +102,21 @@ class object2surf(bpy.types.Operator):
         surfdata=jd.load(os.path.join(outputdir,'surfacemesh.jmsh'))
         idx=1
         if(len(surfdata['MeshGroup'])>0):
-            for ob in surfdata['MeshGroup']:
-                objname='surf_'+str(idx)
-                if(ob.has_key('_DataInfo_') and ob['_DataInfo_'].has_key('BlenderObjectName')):
+            ob=surfdata['MeshGroup']
+            objname='surf_'+str(idx)
+            if('MeshNode' in ob):
+                if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                     objname=ob['_DataInfo_']['BlenderObjectName']
-                LoadSurfMesh(ob,objname)
+                AddMeshFromNodeFace(ob['MeshNode'],ob['MeshSurf'],objname)
                 bpy.context.view_layer.objects.active=bpy.data.objects[objname]
-                idx+=1
+            else:
+                for ob in surfdata['MeshGroup']:
+                    objname='surf_'+str(idx)
+                    if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
+                        objname=ob['_DataInfo_']['BlenderObjectName']
+                    AddMeshFromNodeFace(ob['MeshNode'],ob['MeshSurf'],objname)
+                    bpy.context.view_layer.objects.active=bpy.data.objects[objname]
+                    idx+=1
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
@@ -133,11 +128,6 @@ class object2surf(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        global g_action, g_actionparam, g_convtri, g_tetgenopt
-        self.action = g_action
-        self.actionparam = g_actionparam
-        self.convtri = g_convtri
-        self.tetgenopt = g_tetgenopt
         return context.window_manager.invoke_props_dialog(self)
 
 
@@ -166,15 +156,15 @@ class OBJECT2SURF_OT_invoke_export(bpy.types.Operator):
         print(self.filepath)
         if(not (self.filepath == "")):
             if os.name == 'nt':
-                os.popen("copy '"+os.path.join(GetBPWorkFolder(),'blendersurf.jmsh')+"' '"+self.filepath+"'");
+                os.popen("copy '"+os.path.join(GetBPWorkFolder(),'blendersurf.jmsh')+"' '"+self.filepath+"'")
             else:
-                os.popen("cp '"+os.path.join(GetBPWorkFolder(),'blendersurf.jmsh')+"' '"+self.filepath+"'");
+                os.popen("cp '"+os.path.join(GetBPWorkFolder(),'blendersurf.jmsh')+"' '"+self.filepath+"'")
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-        
+
 register_class(OBJECT2SURF_OT_invoke_export)
 
 

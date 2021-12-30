@@ -14,6 +14,13 @@ g_onlysurf=False
 g_convtri=True
 g_endstep='9'
 g_tetgenopt=""
+enum_endstep=[('1','Step 1: Convert obj to mesh','Convert obj to mesh'),
+             ('2','Step 2: Join all objects','Join all objects'),
+             ('3','Step 3: Intersect objects','Intersect objects'),
+             ('4','Step 4: Convert to triangles','Merge all visible objects, perform intersection and convert to N-gon or triangular mesh'),
+             ('5','Step 5: Export to JMesh','Export the scene to a human-readable universal data exchange file encoded in the JSON format based on the JMesh specification (see http://neurojson.org)'),
+             ('6','Step 6: Run Iso2Mesh and load mesh','Output tetrahedral mesh using Iso2Mesh (http://iso2mesh.sf.net)'),
+             ('9','Run all steps','Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)')]
 
 class scene2mesh(bpy.types.Operator):
     bl_label = 'Convert scene to tetra mesh'
@@ -29,26 +36,14 @@ class scene2mesh(bpy.types.Operator):
     dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
     onlysurf: bpy.props.BoolProperty(default=g_onlysurf,name="Return triangular surface mesh only (no tetrahedral mesh)")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
-    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", 
-                                    items = [('1','Step 1: Convert obj to mesh','Step 1'), 
-                                             ('2','Step 2: Join all objects','Step 2'), 
-                                             ('3','Step 3: Intersect objects','Step 3'), 
-                                             ('4','Step 4: Convert to triangles','Step 4'), 
-                                             ('5','Step 5: Export to JMesh','Step 5'), 
-                                             ('6','Step 6: Run Iso2Mesh and load mesh','Step 6'),
-                                             ('9','Run all steps','Run all steps')])
+    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", items = enum_endstep)
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     @classmethod
     def description(cls, context, properties):
-        hints={'1': 'Convert obj to mesh', 
-               '2': 'Join all objects',
-               '3': 'Intersect objects',
-               '4': 'Merge all visible objects, perform intersection and convert to N-gon or triangular mesh',
-               '5': 'Export the scene to a human-readable universal data exchange file encoded in the JSON format based on the JMesh specification (see http://neurojson.org)',
-               '6': 'Output tetrahedral mesh using Iso2Mesh (http://iso2mesh.sf.net)',
-               '9': 'Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)'
-               }
+        hints={}
+        for item in enum_endstep:
+            hints[item[0]]=item[2]
         return hints[properties.endstep]
 
     def func(self):
@@ -177,14 +172,6 @@ class scene2mesh(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, g_tetgenopt
-        self.maxvol = g_maxvol
-        self.keepratio = g_keepratio
-        self.mergetol = g_mergetol
-        self.dorepair = g_dorepair
-        self.onlysurf = g_onlysurf
-        self.convtri = g_convtri
-        self.tetgenopt = g_tetgenopt
         return context.window_manager.invoke_props_dialog(self)
 
 

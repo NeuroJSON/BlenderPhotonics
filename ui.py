@@ -12,7 +12,6 @@ class BlenderPhotonics_UI(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "BlenderPhotonics"
-    #bl_context = "objectmode"
 
     @classmethod
     def poll(self,context):
@@ -46,7 +45,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         cols2m.operator(object2surf.bl_idname,text='Second tri mesh cut by 1st',icon='SURFACE_DATA').action='boolean-second'
 
         layout.separator()
-        layout.label(text="MMC Photon Simulation", icon='SHADING_SOLID')
+        layout.label(text="Multiphysics Simulation", icon='SHADING_SOLID')
         colmmc = layout.column()
         colmmc.operator(mesh2scene.bl_idname,icon='EDITMODE_HLT')
         colmmc.operator(runmmc.bl_idname,icon='LIGHT_AREA')
@@ -56,6 +55,8 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         colurl = layout.column()
         op=colurl.operator('wm.url_open', text='Iso2Mesh Wiki',icon='URL')
         op.url='http://iso2mesh.sf.net'
+        op=colurl.operator('wm.url_open', text='JMesh Specification',icon='URL')
+        op.url='https://github.com/NeuroJSON/jmesh/blob/master/JMesh_specification.md'
         op=colurl.operator('wm.url_open', text='MMC tutorials',icon='URL')
         op.url='http://mcx.space/wiki/?Learn#mmc'
         op=colurl.operator('wm.url_open', text='Brain2Mesh homepage',icon='URL')
