@@ -107,7 +107,7 @@ class object2surf(bpy.types.Operator):
             if('MeshNode' in ob):
                 if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                     objname=ob['_DataInfo_']['BlenderObjectName']
-                AddMeshFromNodeFace(ob['MeshNode'],ob['MeshSurf'],objname)
+                AddMeshFromNodeFace(ob['MeshNode'],np.array(ob['MeshSurf']-1).tolist(),objname)
                 bpy.context.view_layer.objects.active=bpy.data.objects[objname]
             else:
                 for ob in surfdata['MeshGroup']:
