@@ -6,10 +6,11 @@ import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
 
+g_action='repair'
 g_actionlevel=1.0
 g_convtri=True
 g_tetgenopt=""
-g_action='repair'
+
 
 class object2surf(bpy.types.Operator):
     bl_label = 'Selected objects to surfaces'
@@ -19,16 +20,22 @@ class object2surf(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     action: bpy.props.EnumProperty(default=g_action, name="Run through step", 
                                     items = [('import','Import surface mesh from file','Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'), 
                                              ('export','Export selected to JSON/JMesh','Export selected objects to JSON/JMesh exchange file'), 
-                                             ('boolean','Perform Boolean operation','Perform Boolean operation'), 
+                                             ('boolean-resolve','Two meshes slice each other','Keep both meshes, with each surface sliced by the other'),
+                                             ('boolean-first','First mesh sliced by the 2nd','Keep the first mesh but sliced by the 2nd surface'),
+                                             ('boolean-second','Second mesh sliced by the 1st','Keep the second mesh but sliced by the 1st surface'),
+                                             ('boolean-diff','Differences between the two meshes','Perform Boolean operation'),
+                                             ('boolean-and','Surface mesh ','Perform Boolean operation'),
+                                             ('boolean-or','Perform Boolean operation','Perform Boolean operation'),
+                                             ('boolean (resolve)','Perform Boolean operation','Perform Boolean operation'), 
                                              ('smooth','Smooth selected mesh object','Smooth selected mesh object'), 
                                              ('reorient','Reorient all triangles','Reorient all triangles in counter-clockwise'),
                                              ('repair','Fix self-intersection and holes','Fix self-intersection and holes by calling meshfix'),
                                              ('simplify','Surface simplification', 'Surface simplification')])
     actionlevel: bpy.props.FloatProperty(default=0, name="Action parameter (boolean-1:union)")
+    convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
     @classmethod
