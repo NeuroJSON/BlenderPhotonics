@@ -24,7 +24,7 @@ def GetNodeFacefromObject(obj, istrimesh=True):
         return {'MeshNode':v, 'MeshSurf':f}
     except:
         f = faces
-    return {'MeshNode':v, 'MeshPoly':f}
+    return {'_DataInfo_':{'BlenderObjectName',obj.name},'MeshNode':v, 'MeshPoly':f}
 
 def AddMeshFromNodeFace(node,face,name):
 
@@ -63,6 +63,10 @@ def LoadReginalMesh(meshdata, name):
             meshdata[surfkey]=np.asarray(meshdata[surfkey],dtype=np.uint32);
         meshdata[surfkey]-=1
         AddMeshFromNodeFace(meshdata['MeshNode'],meshdata[surfkey].tolist(),name+str(i+1));
+
+def LoadSurfMesh(meshdata, name):
+    for obj in meshdata:
+        AddMeshFromNodeFace(obj['MeshNode'],obj[surfkey].tolist(),obj);
 
 def LoadTetMesh(meshdata,name):
         if (not isinstance(meshdata['MeshSurf'], np.ndarray)):

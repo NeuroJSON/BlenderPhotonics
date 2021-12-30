@@ -35,7 +35,7 @@ def register():
 def unregister():
     print("Unregistering BlenderPhotonics")
     bpy.utils.unregister_class(scene2mesh)
-    bpy.utils.register_class(object2surf)
+    bpy.utils.unregister_class(object2surf)
     bpy.utils.unregister_class(niifile)
     bpy.utils.unregister_class(nii2mesh)
     bpy.utils.unregister_class(mesh2scene)
