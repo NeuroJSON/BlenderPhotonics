@@ -1,6 +1,4 @@
 import bpy
-import oct2py as op
-import numpy as np
 import jdata as jd
 import os
 from .utils import *
