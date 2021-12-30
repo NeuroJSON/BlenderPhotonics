@@ -1,5 +1,5 @@
 import bpy
-import oct2py as op
+import matlab.engine
 import numpy as np
 import jdata as jd
 import os
@@ -47,8 +47,8 @@ class scene2mesh(bpy.types.Operator):
         return hints[properties.endstep]
 
     def func(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        eng=matlab.engine.start_matlab()
+        eng.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
@@ -142,7 +142,7 @@ class scene2mesh(bpy.types.Operator):
         if(int(self.endstep)<6):
             return
 
-        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2mesh.m'))
+        eng.blender2mesh(nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
