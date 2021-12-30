@@ -41,18 +41,18 @@ class object2surf(bpy.types.Operator):
 
     @classmethod
     def description(cls, context, properties):
-        hints={'import':'Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender', 
-               'export':'Export selected objects to JSON/JMesh exchange file', 
+        hints={'import':'Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender',
+               'export':'Export selected objects to JSON/JMesh exchange file',
                'boolean-resolve':'Output both meshes, with each surface intersected by the other',
                'boolean-first':'Return the first mesh but sliced by the 2nd surface',
                'boolean-second':'Keep the second mesh but sliced by the 1st surface',
                'boolean-diff':'Return the surface of the differential space',
                'boolean-and':'Return the surface of space that are overlapping between the two objects',
                'boolean-or':'The outer surface of the joint object space',
-               'boolean-decouple':'Insert a small gap between two touched objects', 
+               'boolean-decouple':'Insert a small gap between two touched objects',
                'simplify':'Surface simplification', 'Surface simplification'
                'remesh':'Remove badly shaped triangles', 'Remesh surface and remove badly shaped triangles'
-               'smooth':'Smooth selected mesh object', 
+               'smooth':'Smooth selected mesh object',
                'reorient':'Reorient all triangles in counter-clockwise',
                'repair':'Fix self-intersection and holes by calling meshfix'
                }
