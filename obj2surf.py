@@ -1,4 +1,5 @@
 import bpy
+from bpy_extras.io_utils import ImportHelper
 import oct2py as op
 import numpy as np
 import jdata as jd
@@ -15,7 +16,7 @@ enum_action=[('import','Import surface mesh from file','Import surface mesh from
        ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both meshes, with each surface intersected by the other'),
        ('boolean-first','Boolean-first: 1st mesh sliced by the 2nd','Return the first mesh but sliced by the 2nd surface'),
        ('boolean-second','Boolean-second: 2nd mesh sliced by the 1st','Keep the second mesh but sliced by the 1st surface'),
-       ('boolean-diff','Boolean-diff: Space in either object alone','Return the surface of the differential space'),
+       ('boolean-diff','Boolean-diff: 1st mesh subtract 2nd','Return the surface of the 1st surface subtracted by the 2nd'),
        ('boolean-and','Boolean-and: Space in both objects','Return the surface of space that are overlapping between the two objects'),
        ('boolean-or','Boolean-or: Space for joint/union space','The outer surface of the joint object space'),
        ('boolean-decouple','Boolean-decouple: Decouple two shell meshes','Insert a small gap between two touched objects'),
@@ -26,15 +27,15 @@ enum_action=[('import','Import surface mesh from file','Import surface mesh from
        ('repair','Fix self-intersection and holes','Fix self-intersection and holes by calling meshfix')]
 
 class object2surf(bpy.types.Operator):
-    bl_label = 'Selected objects to surfaces'
-    bl_description = "Create surface meshes from selected objects and refine (smoothing, refine, Boolean, repair and simplification)"
+    bl_label = 'Process selected object surfaces'
+    bl_description = "Create surface meshes from selected objects (smoothing, refine, Boolean, repairing, simplification, ...)"
     bl_idname = 'blenderphotonics.blender2surf'
 
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
     action: bpy.props.EnumProperty(default=g_action, name="Operation", items = enum_action)
-    actionparam: bpy.props.FloatProperty(default=0, name="Operation parameter")
+    actionparam: bpy.props.FloatProperty(default=g_actionparam, name="Operation parameter")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
 
@@ -90,7 +91,7 @@ class object2surf(bpy.types.Operator):
 
         # at this point, objects are converted to mesh if possible
         if(self.action == 'export'):
-            bpy.ops.obj2mesh.invoke_export('INVOKE_DEFAULT')
+            bpy.ops.object2surf.invoke_export('INVOKE_DEFAULT')
             return
 
         oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2surf.m'))
@@ -107,14 +108,14 @@ class object2surf(bpy.types.Operator):
             if('MeshNode' in ob):
                 if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                     objname=ob['_DataInfo_']['BlenderObjectName']
-                AddMeshFromNodeFace(ob['MeshNode'],np.array(ob['MeshSurf']-1).tolist(),objname)
+                AddMeshFromNodeFace(ob['MeshNode'],(np.array(ob['MeshSurf'])-1).tolist(),objname)
                 bpy.context.view_layer.objects.active=bpy.data.objects[objname]
             else:
                 for ob in surfdata['MeshGroup']:
                     objname='surf_'+str(idx)
                     if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                         objname=ob['_DataInfo_']['BlenderObjectName']
-                    AddMeshFromNodeFace(ob['MeshNode'],ob['MeshSurf'],objname)
+                    AddMeshFromNodeFace(ob['MeshNode'],(np.array(ob['MeshSurf'])-1).tolist(),objname)
                     bpy.context.view_layer.objects.active=bpy.data.objects[objname]
                     idx+=1
 
@@ -128,7 +129,10 @@ class object2surf(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        if(not self.action == 'import'):
+             return context.window_manager.invoke_props_dialog(self)
+        else:
+             return bpy.ops.object2surf.invoke_import('INVOKE_DEFAULT')
 
 
 #
@@ -148,7 +152,7 @@ class setmeshingprop(bpy.types.Panel):
 # to the console using window_manager.fileselect_add()
 class OBJECT2SURF_OT_invoke_export(bpy.types.Operator):
     bl_idname = "object2surf.invoke_export"
-    bl_label = "Export scene in a JMesh/JSON universal exchange file"
+    bl_label = "Export to JMesh"
 
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
 
@@ -171,16 +175,24 @@ register_class(OBJECT2SURF_OT_invoke_export)
 # This operator will open Blender's file chooser when invoked
 # and store the selected filepath in self.filepath and print it
 # to the console using window_manager.fileselect_add()
-class OBJECT2SURF_OT_invoke_import(bpy.types.Operator):
+class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
     bl_idname = "object2surf.invoke_import"
-    bl_label = "Import object surface mesh in a JMesh/JSON universal exchange file"
+    bl_label = "Import Mesh"
 
+    filename_ext: "*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts"
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
+    filter_glob: bpy.props.StringProperty(
+            default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
+            options={'HIDDEN'},
+            maxlen=2048,  # Max internal buffer length, longer would be clamped.
+            )
 
     def execute(self, context):
-        print(self.filepath)
-        if(not (self.filepath == "")):
-            print(self.filepath)
+        oc = op.Oct2Py()
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        surfdata=oc.feval('surf2jmesh',self.filepath)
+        AddMeshFromNodeFace(surfdata['MeshNode'],(np.array(surfdata['MeshSurf'])-1).tolist(),'importedsurf')
+
         return {'FINISHED'}
 
     def invoke(self, context, event):

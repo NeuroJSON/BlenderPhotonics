@@ -37,12 +37,12 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
         layout.prop(bp, "surffile")
         cols2m = layout.column()
+        cols2m.operator(object2surf.bl_idname,text='Import surface mesh',icon='IMPORT').action='import'
         cols2m.operator(object2surf.bl_idname,icon='SURFACE_DATA').action='export'
-        cols2m.operator(object2surf.bl_idname,text='Simplify tri mesh',icon='SURFACE_DATA').action='simplify'
-        cols2m.operator(object2surf.bl_idname,text='Repair tri mesh',icon='SURFACE_DATA').action='repair'
-        cols2m.operator(object2surf.bl_idname,text='Import surface mesh',icon='SURFACE_DATA').action='import'
-        cols2m.operator(object2surf.bl_idname,text='First tri mesh cut by 2nd',icon='SURFACE_DATA').action='boolean-first'
-        cols2m.operator(object2surf.bl_idname,text='Second tri mesh cut by 1st',icon='SURFACE_DATA').action='boolean-second'
+        cols2m.operator(object2surf.bl_idname,text='Simplify triangular mesh',icon='MOD_SIMPLIFY').action='simplify'
+        cols2m.operator(object2surf.bl_idname,text='Repair and close triangular mesh',icon='MOD_SUBSURF').action='repair'
+        cols2m.operator(object2surf.bl_idname,text='First triangular mesh cut by 2nd',icon='MOD_MASK').action='boolean-first'
+        cols2m.operator(object2surf.bl_idname,text='Second triangular mesh cut by 1st',icon='MOD_MASK').action='boolean-second'
 
         layout.separator()
         layout.label(text="Multiphysics Simulation", icon='SHADING_SOLID')

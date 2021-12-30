@@ -43,15 +43,19 @@ if(~isempty(regexp(blender.param.action,'remesh')))
     end
 end
 
-op=regexp(blender.param.action,'boolean-[a-zA-Z]+','tokens');
+op=regexp(blender.param.action,'boolean-[a-zA-Z]+','match')
 if(~isempty(op))
     if(length(objs)==2)
-        [objs(1).MeshNode, objs(1).MeshSurf]=surfboolean(objs(1).MeshNode, objs(1).MeshSurf, regexprep(op{1},'boolean-',''), objs(2).MeshNode, objs(2).MeshSurf);
+        if(blender.param.level>=0)
+             [objs(1).MeshNode, objs(1).MeshSurf]=surfboolean(objs(1).MeshNode, objs(1).MeshSurf, regexprep(op{1},'boolean-',''), objs(2).MeshNode, objs(2).MeshSurf);
+        else
+             [objs(1).MeshNode, objs(1).MeshSurf]=surfboolean(objs(2).MeshNode, objs(2).MeshSurf, regexprep(op{1},'boolean-',''), objs(1).MeshNode, objs(1).MeshSurf);
+        end
         objs(2)=[];
     end
 end
 
-blender.BlenderObject=objs;
+blender.MeshGroup=objs;
 
 disp(['begin to save surface mesh'])
 savejson('',blender,'FileName',bpmwpath('surfacemesh.jmsh'),'ArrayIndent',0);

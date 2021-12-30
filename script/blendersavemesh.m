@@ -11,7 +11,7 @@ for n = 1:maxtag
     fc1=volface(elem(elem(:,5)==n,1:4));
     outputmesh.(encodevarname(sprintf('MeshSurf(%d)',n)))=fc1;
 end
-outputmesh
+
 if(maxtag==1)
     outputmesh.('MeshSurf')=outputmesh.(encodevarname('MeshSurf(1)'));
     outputmesh=rmfield(outputmesh,encodevarname('MeshSurf(1)'));
