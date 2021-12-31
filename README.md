@@ -1,3 +1,4 @@
+![](http://neurojson.org/wiki/upload/blenderphotonics_header.png)
 
 BlenderPhotonics
 ========================
@@ -6,7 +7,9 @@ BlenderPhotonics
 -   **License**: GNU General Public License version 3 (GPLv3)
 -   **Version**: v2022 (v0.6)
 -   **Website**: <http://mcx.space/BlenderPhotonics>
--   **Acknowledgement**: This project is funded by NIH awards R01-GM114365 and U24-NS124027 (PI: Qianqian Fang)
+-   **Acknowledgement**: This project is funded by NIH awards 
+      [R01-GM114365](https://grantome.com/grant/NIH/R01-GM114365-06) and 
+      [U24-NS124027](https://reporter.nih.gov/search/dXkcyoaEQkaRrkpQoOnEBw/project-details/10308329) (PI: Fang)
 
 Introduction
 -------------
@@ -56,7 +59,8 @@ Installation
 4. Download and unzip **MMCLAB** from http://mcx.space/nightly/ to a work folder
 5. (Optional) If one intends to load JMesh/JSON mesh files with array-level compression support, one should 
    download and unzip the **ZMat Toolbox** from https://github.com/fangq/zmat/releases to a work folder
-6. Automatically add Iso2Mesh, ZMat and MMCLAB to your Octave's search path by opening `~/.octaverc` with a 
+6. Automatically add Iso2Mesh, ZMat and MMCLAB to your Octave's search path by opening 
+   [`~/.octaverc`](https://octave.org/doc/v4.2.1/Startup-Files.html) with a 
    text editor and type
    ```
    addpath('/path/to/iso2mesh');
@@ -75,4 +79,10 @@ Installation
        "N-Panel", and BlenderPhotonics is shown as a tab at the bottom. Click on it to see the BlenderPhotonics GUI.
     4. **How to verify: in the default Blender window with a cube, click on the first button on Blender2Mesh, 
        it should create a mesh**
+
+![](http://neurojson.org/wiki/upload/blenderphotonics_install.png)
+
+Main Interface
+-------------
+![](http://neurojson.org/wiki/upload/blenderphotonics_menu.png)
 
