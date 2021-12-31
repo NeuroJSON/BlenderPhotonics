@@ -36,7 +36,6 @@ if(~isempty(regexp(blender.param.action,'simplify')))
 end
 
 if(~isempty(regexp(blender.param.action,'remesh')))
-objs
     for i=1:length(objs)
         if(~iscell(objs{i}.MeshSurf))
             [objs{i}.MeshNode, objs{i}.MeshSurf]=surfboolean(objs{i}.MeshNode, objs{i}.MeshSurf, 'remesh', objs{i}.MeshNode, objs{i}.MeshSurf);
@@ -48,11 +47,11 @@ op=regexp(blender.param.action,'boolean-[a-zA-Z]+','match')
 if(~isempty(op))
     if(length(objs)==2)
         if(blender.param.level>=0)
-             [objs(1).MeshNode, objs(1).MeshSurf]=surfboolean(objs(1).MeshNode, objs(1).MeshSurf, regexprep(op{1},'boolean-',''), objs(2).MeshNode, objs(2).MeshSurf);
+             [objs{1}.MeshNode, objs{1}.MeshSurf]=surfboolean(objs{1}.MeshNode, objs{1}.MeshSurf, regexprep(op{1},'boolean-',''), objs{2}.MeshNode, objs{2}.MeshSurf);
         else
-             [objs(1).MeshNode, objs(1).MeshSurf]=surfboolean(objs(2).MeshNode, objs(2).MeshSurf, regexprep(op{1},'boolean-',''), objs(1).MeshNode, objs(1).MeshSurf);
+             [objs{1}.MeshNode, objs{1}.MeshSurf]=surfboolean(objs{2}.MeshNode, objs{2}.MeshSurf, regexprep(op{1},'boolean-',''), objs{1}.MeshNode, objs{1}.MeshSurf);
         end
-        objs(2)=[];
+        objs{2}=[];
     end
 end
 

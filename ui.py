@@ -11,7 +11,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
     bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Meshing"
+    bl_category = "BlenderPhotonics"
 
     @classmethod
     def poll(self,context):
@@ -37,7 +37,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Surface2Mesh", icon='SHADING_SOLID')
         cols2m = layout.column()
         cols2m.operator(object2surf.bl_idname,text='Import surface mesh',icon='IMPORT').action='import'
-        cols2m.operator(object2surf.bl_idname,icon='EXPORT').action='export'
+        cols2m.operator(object2surf.bl_idname,text='Export object to JSON/JMesh', icon='EXPORT').action='export'
         cols2m.operator(object2surf.bl_idname,text='Repair and close triangular mesh',icon='MOD_SUBSURF').action='repair'
         rowbool = layout.row()
         rowbool.label(text='Boolean')
