@@ -14,8 +14,10 @@ if(~isempty(regexp(niipath,'^http','match','ignorecase')))
     niipath=bpmwpath(['volumedata',suffix]);
 end
 
-if(~isempty(regexp(niipath,'\.[jb]*nii(\.gz)*$|\.json','match','ignorecase')))
+if(~isempty(regexp(niipath,'\.[jb]*nii(\.gz)*$|\.json$','match','ignorecase')))
     vol = loadjnifti(niipath);
+elseif(~isempty(regexp(niipath,'\.hdr$|\.img$','match','ignorecase')))
+    vol = loadnifti(niipath);
 elseif(~isempty(regexp(niipath,'\.mat$','match','ignorecase')))
     tmp=load(niipath);
     vars=fieldnames(tmp);

@@ -13,18 +13,18 @@ g_convtri=True
 g_tetgenopt=""
 enum_action=[('import','Import surface mesh from file','Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'),
        ('export','Export selected to JSON/JMesh','Export selected objects to JSON/JMesh exchange file'),
-       ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both meshes, with each surface intersected by the other'),
-       ('boolean-first','Boolean-first: 1st mesh sliced by the 2nd','Return the first mesh but sliced by the 2nd surface'),
-       ('boolean-second','Boolean-second: 2nd mesh sliced by the 1st','Keep the second mesh but sliced by the 1st surface'),
-       ('boolean-diff','Boolean-diff: 1st mesh subtract 2nd','Return the surface of the 1st surface subtracted by the 2nd'),
-       ('boolean-and','Boolean-and: Space in both objects','Return the surface of space that are overlapping between the two objects'),
-       ('boolean-or','Boolean-or: Space for joint/union space','The outer surface of the joint object space'),
-       ('boolean-decouple','Boolean-decouple: Decouple two shell meshes','Insert a small gap between two touched objects'),
-       ('simplify','Surface simplification', 'Surface simplification'),
-       ('remesh','Remove badly shaped triangles', 'Remesh surface and remove badly shaped triangles'),
-       ('smooth','Smooth selected mesh object','Smooth selected mesh object'),
-       ('reorient','Reorient all triangles','Reorient all triangles in counter-clockwise'),
-       ('repair','Fix self-intersection and holes','Fix self-intersection and holes by calling meshfix')]
+       ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both objects, with each surface intersected by the other'),
+       ('boolean-first','Boolean-first: 1st mesh sliced by the 2nd','Return the 1st object but sliced by the 2nd object'),
+       ('boolean-second','Boolean-second: 2nd mesh sliced by the 1st','Return the 2nd object but sliced by the 1st object'),
+       ('boolean-diff','Boolean-diff: 1st mesh subtract 2nd','Return the 1st object subtracted by the 2nd'),
+       ('boolean-and','Boolean-and: Space in both objects','Return the surface of the overlapping region'),
+       ('boolean-or','Boolean-or: Space for joint/union space','Return the outer surface of the merged object'),
+       ('boolean-decouple','Boolean-decouple: Decouple two shell meshes','Insert a small gap between two touching objects'),
+       ('simplify','Surface simplification', 'Simplifing a surface by decimating edges'),
+       ('remesh','Remesh surface', 'Remesh surface and remove badly shaped triangles'),
+       ('smooth','Smooth selected objects','Smooth selected mesh object'),
+       ('reorient','Reorient all triangles','Reorient all triangles in counter-clockwise direction'),
+       ('repair','Fix self-intersection and holes','Fix self-intersection and fill holes of a closed object')]
 
 class object2surf(bpy.types.Operator):
     bl_label = 'Process selected object surfaces'
@@ -153,6 +153,7 @@ class setmeshingprop(bpy.types.Panel):
 class OBJECT2SURF_OT_invoke_export(bpy.types.Operator):
     bl_idname = "object2surf.invoke_export"
     bl_label = "Export to JMesh"
+    bl_description = "Export mesh in the JSON/JMesh format"
 
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
 
@@ -178,6 +179,7 @@ register_class(OBJECT2SURF_OT_invoke_export)
 class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
     bl_idname = "object2surf.invoke_import"
     bl_label = "Import Mesh"
+    bl_description = "Import triangular surfaces in .json,.jmsh,.bmsh,.off,.medit,.stl,.smf,.gts"
 
     filename_ext: "*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts"
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')

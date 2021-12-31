@@ -75,12 +75,6 @@ class nii2mesh(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        global g_maxvol, g_radbound, g_distbound, g_imagetype, g_method
-        self.maxvol = g_maxvol
-        self.radbound = g_distbound
-        self.distbound = g_distbound
-        self.imagetype = g_imagetype
-        self.method = g_method
         return context.window_manager.invoke_props_dialog(self)
 
 #

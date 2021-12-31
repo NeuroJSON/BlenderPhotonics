@@ -11,7 +11,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
     bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "BlenderPhotonics"
+    bl_category = "Meshing"
 
     @classmethod
     def poll(self,context):

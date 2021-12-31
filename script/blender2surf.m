@@ -5,40 +5,41 @@ blender=loadjson(filename, 'FastArrayParser',0);
 objs=blender.MeshGroup;
 if(~isempty(regexp(blender.param.action,'repair')))
     for i=1:length(objs)
-        if(~iscell(objs(i).MeshSurf))
-            [objs(i).MeshNode, objs(i).MeshSurf]=meshcheckrepair(objs(i).MeshNode, objs(i).MeshSurf, 'meshfix');
+        if(~iscell(objs{i}.MeshSurf))
+            [objs{i}.MeshNode, objs{i}.MeshSurf]=meshcheckrepair(objs{i}.MeshNode, objs{i}.MeshSurf, 'meshfix');
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'smooth')))
     for i=1:length(objs)
-        if(~iscell(objs(i).MeshSurf))
-            objs(i).MeshNode=sms(objs(i).MeshNode, objs(i).MeshSurf, blender.param.level);
+        if(~iscell(objs{i}.MeshSurf))
+            objs{i}.MeshNode=sms(objs{i}.MeshNode, objs{i}.MeshSurf, blender.param.level);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'reorient')))
     for i=1:length(objs)
-        if(~iscell(objs(i).MeshSurf))
-            [objs(i).MeshNode, objs(i).MeshSurf]=surfreorient(objs(i).MeshNode, objs(i).MeshSurf);
+        if(~iscell(objs{i}.MeshSurf))
+            [objs{i}.MeshNode, objs{i}.MeshSurf]=surfreorient(objs{i}.MeshNode, objs{i}.MeshSurf);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'simplify')))
     for i=1:length(objs)
-        if(~iscell(objs(i).MeshSurf))
-            [objs(i).MeshNode, objs(i).MeshSurf]=meshresample(objs(i).MeshNode, objs(i).MeshSurf, blender.param.level);
+        if(~iscell(objs{i}.MeshSurf))
+            [objs{i}.MeshNode, objs{i}.MeshSurf]=meshresample(objs{i}.MeshNode, objs{i}.MeshSurf, blender.param.level);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'remesh')))
+objs
     for i=1:length(objs)
-        if(~iscell(objs(i).MeshSurf))
-            [objs(i).MeshNode, objs(i).MeshSurf]=surfboolean(objs(i).MeshNode, objs(i).MeshSurf, 'remesh', objs(i).MeshNode, objs(i).MeshSurf);
+        if(~iscell(objs{i}.MeshSurf))
+            [objs{i}.MeshNode, objs{i}.MeshSurf]=surfboolean(objs{i}.MeshNode, objs{i}.MeshSurf, 'remesh', objs{i}.MeshNode, objs{i}.MeshSurf);
         end
     end
 end
