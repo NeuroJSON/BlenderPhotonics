@@ -1,6 +1,6 @@
-function blender2surf
+function blender2surf(filename)
 
-blender=loadjson(bpmwpath('blendersurf.jmsh'), 'FastArrayParser',0);
+blender=loadjson(filename, 'FastArrayParser',0);
 
 objs=blender.MeshGroup;
 if(~isempty(regexp(blender.param.action,'repair')))

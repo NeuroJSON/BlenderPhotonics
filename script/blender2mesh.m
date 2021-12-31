@@ -1,6 +1,6 @@
-function blender2mesh
+function blender2mesh(filename)
 
-blender=loadjson(bpmwpath('blendermesh.jmsh'), 'FastArrayParser',0);
+blender=loadjson(filename, 'FastArrayParser',0);
 
 if(blender.param.mergetol>0)
     [blender.MeshNode, blender.MeshPoly]=removedupnodes(blender.MeshNode, blender.MeshPoly, blender.param.mergetol);

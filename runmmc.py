@@ -40,7 +40,7 @@ class runmmc(bpy.types.Operator):
         oc = op.Oct2Py()
         system = platform.system()
 
-        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blendermmc.m'))
+        oc.feval('blendermmc',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'))
 
         #remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')

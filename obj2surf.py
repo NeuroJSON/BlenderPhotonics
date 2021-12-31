@@ -36,8 +36,8 @@ class object2surf(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
     action: bpy.props.EnumProperty(default=g_action, name="Operation", items = enum_action)
     actionparam: bpy.props.FloatProperty(default=g_actionparam, name="Operation parameter")
-    convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
-    tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
+    convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first")
+    tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional TetGen flags")
 
     @classmethod
     def description(cls, context, properties):
@@ -94,7 +94,7 @@ class object2surf(bpy.types.Operator):
             bpy.ops.object2surf.invoke_export('INVOKE_DEFAULT')
             return
 
-        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','blender2surf.m'))
+        oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'))
 
         # import volum mesh to blender(just for user to check the result)
         if len(bpy.context.selected_objects)>=1:

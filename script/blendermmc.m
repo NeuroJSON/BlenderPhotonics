@@ -1,7 +1,7 @@
-function blendermmc
+function blendermmc(paramfile, meshfile)
 
-param=loadjson(bpmwpath('mmcinfo.json'));
-meshdata=load(bpmwpath('meshdata.mat'));
+param=loadjson(paramfile);
+meshdata=load(meshfile));
 
 %% Pre-processing data
 propbk = [0,0,1,1];

@@ -1,6 +1,6 @@
-function nii2mesh
+function nii2mesh(filename)
 
-input=loadjson(bpmwpath('niipath.json'));
+input=loadjson(filename);
 niipath=input.niipath;
 
 if(~isempty(regexp(niipath,'^http','match','ignorecase')))

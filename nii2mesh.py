@@ -47,7 +47,7 @@ class nii2mesh(bpy.types.Operator):
             return
         jd.save({'niipath':niipath, 'maxvol':self.maxvol, 'radbound':self.radbound,'distbound':self.distbound, 'isovalue':self.isovalue,'imagetype':self.imagetype,'method':self.method},os.path.join(outputdir,'niipath.json'));
 
-        oc.run(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script','nii2mesh.m'))
+        oc.feval('nii2mesh',os.path.join(outputdir,'niipath.json'))
 
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
