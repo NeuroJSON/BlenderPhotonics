@@ -55,6 +55,7 @@ def LoadReginalMesh(meshdata, name):
     n=len(meshdata.keys())-1
 
     # To import mesh.ply in batches
+    bbx={'min': np.array([np.inf, np.inf, np.inf]), 'max': np.array([-np.inf, -np.inf, -np.inf])}
     for i in range (0,n):
         surfkey='MeshSurf('+str(i+1)+')'
         if(n==1):
@@ -62,7 +63,11 @@ def LoadReginalMesh(meshdata, name):
         if (not isinstance(meshdata[surfkey], np.ndarray)):
             meshdata[surfkey]=np.asarray(meshdata[surfkey],dtype=np.uint32);
         meshdata[surfkey]-=1
+        bbx['min']=np.amin(np.vstack((bbx['min'], np.amin(meshdata['MeshNode'],axis=0))), axis=0)
+        bbx['max']=np.amax(np.vstack((bbx['max'], np.amax(meshdata['MeshNode'],axis=0))), axis=0)
         AddMeshFromNodeFace(meshdata['MeshNode'],meshdata[surfkey].tolist(),name+str(i+1))
+    print(bbx)
+    return bbx
 
 def LoadTetMesh(meshdata,name):
         if (not isinstance(meshdata['MeshSurf'], np.ndarray)):

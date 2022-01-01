@@ -3,6 +3,10 @@ function blender2surf(filename)
 blender=loadjson(filename, 'FastArrayParser',0);
 
 objs=blender.MeshGroup;
+if(isstruct(objs) && length(objs)==1)
+    objs={objs};
+end
+
 if(~isempty(regexp(blender.param.action,'repair')))
     for i=1:length(objs)
         if(~iscell(objs{i}.MeshSurf))

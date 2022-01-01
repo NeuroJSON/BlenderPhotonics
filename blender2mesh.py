@@ -14,7 +14,7 @@ g_onlysurf=False
 g_convtri=True
 g_endstep='9'
 g_tetgenopt=""
-enum_endstep=[('1','Step 1: Convert obj to mesh','Convert obj to mesh'),
+enum_endstep=[('1','Step 1: Convert objects to mesh','Convert objects to mesh'),
              ('2','Step 2: Join all objects','Join all objects'),
              ('3','Step 3: Intersect objects','Intersect objects'),
              ('4','Step 4: Convert to triangles','Merge all visible objects, perform intersection and convert to N-gon or triangular mesh'),
@@ -30,8 +30,8 @@ class scene2mesh(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
-    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tetrahedron volume")
-    keepratio: bpy.props.FloatProperty(default=g_keepratio,name="Percent of edges to be kept (0-1)")
+    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tet volume")
+    keepratio: bpy.props.FloatProperty(default=g_keepratio,name="Fraction edge kept (0-1)")
     mergetol: bpy.props.FloatProperty(default=g_mergetol,name="Tolerance to merge nodes (0 to disable)")
     dorepair: bpy.props.BoolProperty(default=g_dorepair,name="Repair mesh (single object only)")
     onlysurf: bpy.props.BoolProperty(default=g_onlysurf,name="Return triangular surface mesh only (no tetrahedral mesh)")

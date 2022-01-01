@@ -1,7 +1,7 @@
 function blendermmc(paramfile, meshfile)
 
 param=loadjson(paramfile);
-meshdata=load(meshfile));
+meshdata=load(meshfile);
 
 %% Pre-processing data
 propbk = [0,0,1,1];

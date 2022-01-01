@@ -12,8 +12,6 @@ class runmmc(bpy.types.Operator):
     bl_idname = 'blenderphotonics.runmmc'
     
     def preparemmc(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         light_source = [] # location, direction, photon number, Type,
@@ -38,7 +36,7 @@ class runmmc(bpy.types.Operator):
 
         #run MMC
         oc = op.Oct2Py()
-        system = platform.system()
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         oc.feval('blendermmc',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'))
 

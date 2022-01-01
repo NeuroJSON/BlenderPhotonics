@@ -24,7 +24,7 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
         colb2m = layout.column()
         colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE').endstep='9'
-        colb2m.operator(scene2mesh.bl_idname,text='Export scene to JMesh/JSON',icon='FILE_TICK').endstep='5'
+        colb2m.operator(scene2mesh.bl_idname,text='Export scene to JSON/JMesh',icon='FILE_TICK').endstep='5'
         colb2m.operator(scene2mesh.bl_idname,text='Merge objects only',icon='MOD_BOOLEAN').endstep='4'
 
         layout.separator()
