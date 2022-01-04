@@ -6,15 +6,39 @@ import os
 import platform
 from .utils import *
 
+g_nphoton=10000
+g_tend=5e-9
+g_tstep=5e-9
+g_method="elem"
+g_isreflect=True
+g_isnormalized=True
+g_basisorder=1
+g_debuglevel="TP"
+g_gpuid="1"
+
+
 class runmmc(bpy.types.Operator):
     bl_label = 'Run MMC photon simulation'
     bl_description = "Run mesh-based Monte Carlo simulation"
     bl_idname = 'blenderphotonics.runmmc'
-    
+
+    # creat a interface to set uesrs' model parameter.
+
+    bl_options = {"REGISTER", "UNDO"}
+    nphoton: bpy.props.FloatProperty(default=g_nphoton, name="Photon number")
+    tend: bpy.props.FloatProperty(default=g_tend,name="Time gate width (s)")
+    tstep: bpy.props.FloatProperty(default=g_tstep,name="Time gate step (s)")
+    isreflect: bpy.props.BoolProperty(default=g_isreflect,name="Do reflection")
+    isnormalized: bpy.props.BoolProperty(default=g_isnormalized,name="Normalize output")
+    basisorder: bpy.props.IntProperty(default=g_basisorder,step=1,name="Basis order (0 or 1)")
+    method: bpy.props.EnumProperty(default=g_method, name="Raytracer (use elem)", items = [('elem','elem: Saving weight on elements','Saving weight on elements'),('grid','grid: Dual-grid MMC (not supported)','Dual-grid MMC')])
+    gpuid: bpy.props.StringProperty(default=g_gpuid,name="GPU ID (01 mask,-1=CPU)")
+    debuglevel: bpy.props.StringProperty(default=g_debuglevel,name="Debug flag [MCBWDIOXATRPE]")
+
     def preparemmc(self):
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
-        light_source = [] # location, direction, photon number, Type,
+        cfg = [] # location, direction, photon number, Type,
 
         for obj in bpy.data.objects[0:-1]:
             if(not ("mua" in obj)):
@@ -25,14 +49,16 @@ class runmmc(bpy.types.Operator):
         location =  np.array(obj.location).tolist();
         bpy.context.object.rotation_mode = 'QUATERNION'
         direction =  np.array(bpy.context.object.rotation_quaternion).tolist();
-        light_source={'nphoton':obj["nphoton"], 'srctype':obj["srctype"], 'unitinmm':obj["unitinmm"]};
+        cfg={'srcpos':location, 'srcdir':direction,'nphoton': self.nphoton, 'srctype':obj["srctype"], 'unitinmm': obj['unitinmm'], 
+            'tend':self.tend, 'tstep':self.tstep, 'isreflect':self.isreflect, 'isnormalized':self.isnormalized,
+            'method':self.method, 'basisorder':self.basisorder, 'debuglevel':self.debuglevel, 'gpuid':self.gpuid}
 
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 
         # Save MMC information
-        jd.save({'prop':parameters,'srcpos':location,'srcdir':direction,'cfg':light_source}, os.path.join(outputdir,'mmcinfo.json'));
+        jd.save({'prop':parameters,'cfg':cfg}, os.path.join(outputdir,'mmcinfo.json'));
 
         #run MMC
         oc = op.Oct2Py()
@@ -59,13 +85,15 @@ class runmmc(bpy.types.Operator):
             x=(x-min)/(max-min);
             return(x)
 
+        colorbit=10
+        colorkind=2**colorbit-1
         weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']),np.min(mmcoutput['logflux']))
+        weight_data_test =np.rint(weight_data*(colorkind))
 
         new_vertex_group = obj.vertex_groups.new(name='weight')
-        vertexs = [vert.co for vert in obj.data.vertices]
-        for vert in vertexs:
-            ind=vertexs.index(vert)
-            new_vertex_group.add([ind], weight_data[int(ind)], 'ADD')
+        for i in range(colorkind):
+            ind=np.array(np.where(weight_data_test==i)).tolist()
+            new_vertex_group.add(ind[0], i/colorkind, 'ADD')
 
         bpy.context.view_layer.objects.active=obj
         bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
@@ -79,3 +107,18 @@ class runmmc(bpy.types.Operator):
         print("Begin to run MMC source transport simulation ...")
         self.preparemmc()
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+#
+#   Dialog to set meshing properties
+#
+class setmmcprop(bpy.types.Panel):
+    bl_label = "MMC Simulation Setting"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    def draw(self, context):
+        global g_nphoton, g_tend, g_tstep, g_method, g_isreflect, g_isnormalized, g_basisorder, g_debuglevel, g_gpuid
+        self.layout.operator("object.dialog_operator")

@@ -6,7 +6,7 @@ meshdata=load(meshfile);
 %% Pre-processing data
 propbk = [0,0,1,1];
 prop = [propbk;reshape(param.prop,[],max(meshdata.elem(:,5)))'];
-Q=num2cell(param.srcdir);
+Q=num2cell(param.cfg.srcdir);
 [w,x,y,z] = Q{:};
 R = [1-2*y^2-2*z^2,2*x*y-2*z*w,2*x*z+2*y*w;
     2*x*y+2*z*w,1-2*x^2-2*z^2,2*y*z-2*x*w;
@@ -20,16 +20,23 @@ cfg.unitinmm = param.cfg.unitinmm;
 cfg.node = meshdata.node;
 cfg.elem = meshdata.elem(:,1:4);
 cfg.elemprop=meshdata.elem(:,5);
-cfg.srcpos=param.srcpos;
+cfg.srcpos=param.cfg.srcpos;
 cfg.srcdir= dir';
 cfg.prop= prop;
 cfg.tstart=0;
-cfg.tend=5e-9;
-cfg.tstep=5e-9;
-cfg.debuglevel='TP';
+cfg.tend=param.cfg.tend;
+cfg.tstep=param.cfg.tstep;
+cfg.debuglevel=param.cfg.debuglevel;
 cfg.issaveref=0;
-cfg.method='elem';
-cfg.e0 = '-';
+cfg.method=param.cfg.method;
+cfg.isreflect=param.cfg.isreflect;
+cfg.isnormalized=param.cfg.isnormalized;
+cfg.gpuid=param.cfg.gpuid;
+
+cfg.e0=tsearchn(cfg.node,cfg.elem,cfg.srcpos);
+if(isnan(cfg.e0))
+    cfg.e0 = '-';
+end
 
 save('-mat7-binary',bpmwpath('mmccfg.mat'),'cfg');
 
