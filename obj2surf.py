@@ -10,7 +10,6 @@ from .utils import *
 g_action='repair'
 g_actionparam=1.0
 g_convtri=True
-g_tetgenopt=""
 enum_action=[('import','Import surface mesh from file','Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'),
        ('export','Export selected to JSON/JMesh','Export selected objects to JSON/JMesh exchange file'),
        ('boolean-resolve','Boolean-resolve: Two meshes slice each other','Output both objects, with each surface intersected by the other'),
@@ -37,7 +36,6 @@ class object2surf(bpy.types.Operator):
     action: bpy.props.EnumProperty(default=g_action, name="Operation", items = enum_action)
     actionparam: bpy.props.FloatProperty(default=g_actionparam, name="Operation parameter")
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first")
-    tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional TetGen flags")
 
     @classmethod
     def description(cls, context, properties):
@@ -144,7 +142,7 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_action, g_actionparam, g_convtri, g_tetgenopt
+        global g_action, g_actionparam, g_convtri
         self.layout.operator("object.dialog_operator")
 
 # This operator will open Blender's file chooser when invoked
@@ -186,6 +184,7 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
     filter_glob: bpy.props.StringProperty(
             default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
             options={'HIDDEN'},
+            description="Reading triangular surface mesh from *.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
             maxlen=2048,  # Max internal buffer length, longer would be clamped.
             )
 

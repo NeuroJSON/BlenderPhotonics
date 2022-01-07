@@ -56,6 +56,6 @@ end
 %% post processing, scale mesh with the voxel size 0.1 mm
 node=node(:,1:3);
 elem(:,1:4)=meshreorient(node(:,1:3),elem(:,1:4));
-save('-mat7-binary',bpmwpath('niimesh.mat'),'node','elem','face');
+save('-mat7-binary',bpmwpath('meshdata.mat'),'node','elem','face');
 
 blendersavemesh(node,elem);

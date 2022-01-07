@@ -18,8 +18,8 @@ class mesh2scene(bpy.types.Operator):
         # folder path for importing .jmsh files
         outputdir = GetBPWorkFolder();
         
-        regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
-        LoadReginalMesh(regiondata,'region_');
+        regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'))
+        bbx=LoadReginalMesh(regiondata,'region_')
 
         ## add properties
         for obj in bpy.data.objects:
@@ -33,7 +33,10 @@ class mesh2scene(bpy.types.Operator):
         light_object = bpy.data.objects.new(name="source", object_data=light_data)
         bpy.context.collection.objects.link(light_object)
         bpy.context.view_layer.objects.active = light_object
-        light_object.location = (0, 0, 5)
+        if((not np.any(np.isinf(bbx['min']))) and (not np.any(np.isinf(bbx['max'])))):
+            light_object.location = ((bbx['min'][0]+bbx['max'][0])*0.5, (bbx['min'][1]+bbx['max'][1])*0.5, bbx['max'][2]+0.1*(bbx['max'][2]-bbx['min'][2]))
+        else:
+            light_object.location = (0, 0, 5)
         dg = bpy.context.evaluated_depsgraph_get()
         dg.update()
 
