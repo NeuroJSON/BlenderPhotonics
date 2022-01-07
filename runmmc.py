@@ -61,13 +61,14 @@ class runmmc(bpy.types.Operator):
             x=(x-min)/(max-min);
             return(x)
 
+        colorbit=10
+        colorkind=2**colorbit-1
         weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']),np.min(mmcoutput['logflux']))
 
         new_vertex_group = obj.vertex_groups.new(name='weight')
-        vertexs = [vert.co for vert in obj.data.vertices]
-        for vert in vertexs:
-            ind=vertexs.index(vert)
-            new_vertex_group.add([ind], weight_data[int(ind)], 'ADD')
+        for i in range(colorkind+1):
+            ind=np.array(np.where(weight_data_test==i)).tolist()
+            new_vertex_group.add(ind[0], i/colorkind, 'ADD')
 
         bpy.context.view_layer.objects.active=obj
         bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
