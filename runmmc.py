@@ -10,6 +10,7 @@ g_nphoton=10000
 g_tend=5e-9
 g_tstep=5e-9
 g_method="elem"
+g_outputtype="flux"
 g_isreflect=True
 g_isnormalized=True
 g_basisorder=1
@@ -32,6 +33,7 @@ class runmmc(bpy.types.Operator):
     isnormalized: bpy.props.BoolProperty(default=g_isnormalized,name="Normalize output")
     basisorder: bpy.props.IntProperty(default=g_basisorder,step=1,name="Basis order (0 or 1)")
     method: bpy.props.EnumProperty(default=g_method, name="Raytracer (use elem)", items = [('elem','elem: Saving weight on elements','Saving weight on elements'),('grid','grid: Dual-grid MMC (not supported)','Dual-grid MMC')])
+    outputtype: bpy.props.EnumProperty(default=g_outputtype, name="Output quantity", items = [('flux','flux: fluence rate','fluence rate (J/mm^2/s)'),('fluence','fluence: fluence (J/mm^2)','fluence in J/mm^2'),('energy','energy: energy density J/mm^3','energy density J/mm^3')])
     gpuid: bpy.props.StringProperty(default=g_gpuid,name="GPU ID (01 mask,-1=CPU)")
     debuglevel: bpy.props.StringProperty(default=g_debuglevel,name="Debug flag [MCBWDIOXATRPE]")
 
@@ -49,10 +51,13 @@ class runmmc(bpy.types.Operator):
         location =  np.array(obj.location).tolist();
         bpy.context.object.rotation_mode = 'QUATERNION'
         direction =  np.array(bpy.context.object.rotation_quaternion).tolist();
-        cfg={'srcpos':location, 'srcdir':direction,'nphoton': self.nphoton, 'srctype':obj["srctype"], 'unitinmm': obj['unitinmm'], 
+        srcparam1=[val for val in obj['srcparam1']]
+        srcparam2=[val for val in obj['srcparam2']]
+        cfg={'srctype':obj['srctype'],'srcpos':location, 'srcdir':direction,'srcparam1':srcparam1,
+            'srcparam2':srcparam2,'nphoton': self.nphoton, 'srctype':obj["srctype"], 'unitinmm': obj['unitinmm'],
             'tend':self.tend, 'tstep':self.tstep, 'isreflect':self.isreflect, 'isnormalized':self.isnormalized,
-            'method':self.method, 'basisorder':self.basisorder, 'debuglevel':self.debuglevel, 'gpuid':self.gpuid}
-
+            'method':self.method, 'outputtype':self.outputtype,'basisorder':self.basisorder, 'debuglevel':self.debuglevel, 'gpuid':self.gpuid}
+        print(obj['srctype'])
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
@@ -120,5 +125,5 @@ class setmmcprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_nphoton, g_tend, g_tstep, g_method, g_isreflect, g_isnormalized, g_basisorder, g_debuglevel, g_gpuid
+        global g_nphoton, g_tend, g_tstep, g_method,g_outputtype, g_isreflect, g_isnormalized, g_basisorder, g_debuglevel, g_gpuid
         self.layout.operator("object.dialog_operator")
