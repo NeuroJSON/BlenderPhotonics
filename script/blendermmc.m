@@ -1,6 +1,6 @@
 function blendermmc(paramfile, meshfile)
 
-param=loadjson(paramfile);
+param=loadjson(paramfile)
 meshdata=load(meshfile);
 
 %% Pre-processing data
@@ -12,8 +12,6 @@ R = [1-2*y^2-2*z^2,2*x*y-2*z*w,2*x*z+2*y*w;
     2*x*y+2*z*w,1-2*x^2-2*z^2,2*y*z-2*x*w;
     2*x*z-2*y*w,2*y*z+2*x*w,1-2*x^2-2*y^2];
 dir = R*[0;0;-1];
-
-param.cfg.isreflect
 
 %% cfg build
 cfg.nphoton= double(param.cfg.nphoton);
@@ -35,20 +33,22 @@ cfg.debuglevel=param.cfg.debuglevel;
 cfg.issaveref=0;
 cfg.method=param.cfg.method;
 cfg.outputtype=param.cfg.outputtype;
-cfg.isreflect=1;
+cfg.isreflect=double(param.cfg.isreflect);
 cfg.isnormalized=param.cfg.isnormalized;
 cfg.gpuid=param.cfg.gpuid;
 
-cfg.e0=tsearchn(cfg.node,cfg.elem,cfg.srcpos);
-if(isnan(cfg.e0))
-    cfg.e0 = '-';
+if(strcmp(cfg.srctype,'pencil') || strcmp(cfg.srctype,'isotropic') || strcmp(cfg.srctype,'cone'))
+    cfg.e0=tsearchn(cfg.node,cfg.elem,cfg.srcpos);
+    if(strcmp(cfg.srctype,'pencil') && isnan(cfg.e0))
+        cfg.e0 = '-';
+    end
 end
 
 save('-mat7-binary',bpmwpath('mmccfg.mat'),'cfg');
 
 %% run the simulation
 
-cfg=mmclab(cfg,'prep');
+%cfg=mmclab(cfg,'prep');
 
 flux=mmclab(cfg);
 
