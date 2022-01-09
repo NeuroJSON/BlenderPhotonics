@@ -47,7 +47,7 @@ else
           mmcsrcdomain(srcdef,[min(cfg.node);max(cfg.node)]));
 end
 
-save('-mat7-binary',bpmwpath('mmccfg.mat'),'cfg');
+save('-v7',bpmwpath('mmccfg.mat'),'cfg');
 
 %% run the simulation
 

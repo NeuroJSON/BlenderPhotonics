@@ -12,7 +12,7 @@ end
 
 %% perform mesh generation
 [node,elem,face]=s2m(blender.MeshNode,blender.MeshPoly,blender.param.keepratio,blender.param.maxvol,'tetgen1.5',[],[],blender.param.tetgenopt);
-save('-mat7-binary',bpmwpath('meshdata.mat'),'node','elem','face');
+save('-v7',bpmwpath('meshdata.mat'),'node','elem','face');
 disp(['begin to save region mesh'])
 
 blendersavemesh(node,elem);
