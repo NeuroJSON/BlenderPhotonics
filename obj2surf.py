@@ -1,6 +1,5 @@
 import bpy
 from bpy_extras.io_utils import ImportHelper
-import oct2py as op
 import numpy as np
 import jdata as jd
 import os
@@ -45,9 +44,6 @@ class object2surf(bpy.types.Operator):
         return hints[properties.action]
 
     def func(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
-
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
@@ -91,6 +87,18 @@ class object2surf(bpy.types.Operator):
         if(self.action == 'export'):
             bpy.ops.object2surf.invoke_export('INVOKE_DEFAULT')
             return
+
+        try:
+            if(bpy.context.scene.blender_photonics.backend == "octave"):
+                import oct2py as op
+                oc = op.Oct2Py()
+            else:
+                import matlab.engine as op
+                oc = op.matlab.engine.start_matlab()
+        except ImportError:
+            raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
+
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'))
 

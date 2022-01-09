@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import StringProperty
+from bpy.props import StringProperty, EnumProperty
 from bpy.types import PropertyGroup
 
 class niifile(PropertyGroup):
@@ -16,4 +16,10 @@ class niifile(PropertyGroup):
         default="",
         maxlen=2048,
         subtype='FILE_PATH'
+        )
+    backend: EnumProperty(
+        name = "Backend",
+        description="Select either Octave or MATLAB as the backend to run Iso2Mesh and MMCLAB",
+        default="octave",
+        items = (('octave','Octave','Use oct2py to call Iso2Mesh/MMCLAB from GNU Octave'),('matlab','MATLAB','Use matlab.engine to call Iso2Mesh/MMCLAB from MATLAB'))
         )

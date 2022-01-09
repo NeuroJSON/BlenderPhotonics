@@ -21,11 +21,15 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         bp = scene.blender_photonics
+        rowengine = layout.row()
+        rowengine.label(text="Backend:")
+        rowengine.prop(bp, "backend", expand=True)
+
         layout.label(text="Blender2Mesh", icon='SHADING_SOLID')
         colb2m = layout.column()
         colb2m.operator(scene2mesh.bl_idname,icon='MESH_ICOSPHERE').endstep='9'
         colb2m.operator(scene2mesh.bl_idname,text='Export scene to JSON/JMesh',icon='FILE_TICK').endstep='5'
-        colb2m.operator(scene2mesh.bl_idname,text='Merge objects only',icon='MOD_BOOLEAN').endstep='4'
+        colb2m.operator(scene2mesh.bl_idname,text='Preview surface tesselation',icon='MOD_BOOLEAN').endstep='4'
 
         layout.separator()
         layout.label(text="Volume2Mesh", icon='SHADING_SOLID')

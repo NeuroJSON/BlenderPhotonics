@@ -1,5 +1,4 @@
 import bpy
-import oct2py as op
 import numpy as np
 import jdata as jd
 import os
@@ -47,9 +46,6 @@ class scene2mesh(bpy.types.Operator):
         return hints[properties.endstep]
 
     def func(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
-
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
@@ -141,6 +137,18 @@ class scene2mesh(bpy.types.Operator):
         # at this point, all mesh objects are saved to a jmesh file under work-dir as blendermesh.json
         if(int(self.endstep)<6):
             return
+
+        try:
+            if(bpy.context.scene.blender_photonics.backend == "octave"):
+                import oct2py as op
+                oc = op.Oct2Py()
+            else:
+                import matlab.engine as op
+                oc = op.matlab.engine.start_matlab()
+        except ImportError:
+            raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
+
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
         oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'))
 

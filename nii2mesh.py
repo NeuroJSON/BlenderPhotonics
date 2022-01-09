@@ -1,5 +1,4 @@
 import bpy
-import oct2py as op
 import numpy as np
 import jdata as jd
 import os
@@ -28,9 +27,6 @@ class nii2mesh(bpy.types.Operator):
     method: bpy.props.EnumProperty(name="Mesh extraction method", items = [('auto','auto','auto'),('cgalmesh','cgalmesh','cgalmesh'), ('cgalsurf','cgalsurf','cgalsurf'), ('simplify','simplify','simplify')])
  
     def vol2mesh(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
-
         # Remove last .jmsh file
         outputdir = GetBPWorkFolder()
         if not os.path.isdir(outputdir):
@@ -47,6 +43,18 @@ class nii2mesh(bpy.types.Operator):
             return
         jd.save({'niipath':niipath, 'maxvol':self.maxvol, 'radbound':self.radbound,'distbound':self.distbound, 'isovalue':self.isovalue,'imagetype':self.imagetype,'method':self.method},os.path.join(outputdir,'niipath.json'));
 
+        #run MMC
+        try:
+            if(bpy.context.scene.blender_photonics.backend == "octave"):
+                import oct2py as op
+                oc = op.Oct2Py()
+            else:
+                import matlab.engine as op
+                oc = op.matlab.engine.start_matlab()
+        except ImportError:
+            raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
+
+        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         oc.feval('nii2mesh',os.path.join(outputdir,'niipath.json'))
 
         # import volum mesh to blender(just for user to check the result)
