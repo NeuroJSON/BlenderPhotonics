@@ -144,7 +144,7 @@ class scene2mesh(bpy.types.Operator):
                 oc = op.Oct2Py()
             else:
                 import matlab.engine as op
-                oc = op.matlab.engine.start_matlab()
+                oc = op.start_matlab()
         except ImportError:
             raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
 
