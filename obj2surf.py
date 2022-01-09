@@ -100,7 +100,7 @@ class object2surf(bpy.types.Operator):
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
-        oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'))
+        oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
         if len(bpy.context.selected_objects)>=1:

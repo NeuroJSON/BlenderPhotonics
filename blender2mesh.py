@@ -150,7 +150,7 @@ class scene2mesh(bpy.types.Operator):
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
-        oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'))
+        oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
         bpy.ops.object.select_all(action='SELECT')
