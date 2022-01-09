@@ -1,6 +1,7 @@
 import bpy
 from bpy_extras.io_utils import ImportHelper
-import oct2py as op
+# import oct2py as op
+import matlab.engine
 import numpy as np
 import jdata as jd
 import os
@@ -45,8 +46,10 @@ class object2surf(bpy.types.Operator):
         return hints[properties.action]
 
     def func(self):
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        # oc = op.Oct2Py()
+        # oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        eng = matlab.engine.start_matlab()
+        eng.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
 
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
@@ -92,7 +95,8 @@ class object2surf(bpy.types.Operator):
             bpy.ops.object2surf.invoke_export('INVOKE_DEFAULT')
             return
 
-        oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'))
+        # oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'))
+        eng.blender2surf(os.path.join(outputdir,'blendersurf.jmsh'),nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
         if len(bpy.context.selected_objects)>=1:

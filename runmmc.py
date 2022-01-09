@@ -1,5 +1,6 @@
 import bpy
-import oct2py as op
+# import oct2py as op
+import matlab.engine
 import numpy as np
 import jdata as jd
 import os
@@ -66,10 +67,13 @@ class runmmc(bpy.types.Operator):
         jd.save({'prop':parameters,'cfg':cfg}, os.path.join(outputdir,'mmcinfo.json'));
 
         #run MMC
-        oc = op.Oct2Py()
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        # oc = op.Oct2Py()
+        # oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        eng = matlab.engine.start_matlab()
+        eng.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
 
-        oc.feval('blendermmc',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'))
+        # oc.feval('blendermmc',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'))
+        eng.blendermmc(os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'), nargout=0)
 
         #remove all object and import all region as one object
         bpy.ops.object.select_all(action='SELECT')
