@@ -51,16 +51,14 @@ save('-v7',bpmwpath('mmccfg.mat'),'cfg');
 
 %% run the simulation
 
-%cfg=mmclab(cfg,'prep');
-
 flux=mmclab(cfg);
 
 %% Post-processing simulation result
 
 fluxlog1 = log10(abs(flux.data(1:size(cfg.node,1))));
-min = unique(fluxlog1);
+fluxmin = unique(fluxlog1);
 fluxlog=fluxlog1;
-fluxlog(isinf(fluxlog1)) = min(2);
+fluxlog(isinf(fluxlog1)) = fluxmin(2);
 
 
 savejson('',struct('logflux',fluxlog(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
