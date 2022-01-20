@@ -3,13 +3,13 @@
 BlenderPhotonics
 ========================
 
--   **Author**: Yuxuan Zhang (zhang.yuxuan1 at northeastern.edu) and Qianqian Fang (q.fang at neu.edu)
+-   **Author**: Qianqian Fang (q.fang at neu.edu) and Yuxuan Zhang (zhang.yuxuan1 at northeastern.edu)
 -   **License**: GNU General Public License version 3 (GPLv3)
 -   **Version**: v2022 (v0.6)
 -   **Website**: <http://mcx.space/BlenderPhotonics>
 -   **Acknowledgement**: This project is funded by NIH awards 
       [R01-GM114365](https://grantome.com/grant/NIH/R01-GM114365-06) and 
-      [U24-NS124027](https://reporter.nih.gov/search/dXkcyoaEQkaRrkpQoOnEBw/project-details/10308329) (PI: Fang)
+      [U24-NS124027](https://reporter.nih.gov/search/dXkcyoaEQkaRrkpQoOnEBw/project-details/10308329)
 
 Introduction
 -------------
@@ -29,6 +29,11 @@ It uses Blender's user-friendly computer-aided-design (CAD) interface as the fro
 of complex domains, making it easy-to-use for less-experienced users to create sophisticated optical
 simulations needed for a wide range of biophotonics applications.
 
+The details of this work can be found in the below preprint:
+
+- Yuxuang Zhang and Qianqian Fang, "[BlenderPhotonics – a versatile environment for 3-D complex bio-tissue
+  modeling and light transport simulations based on Blender](https://doi.org/10.1101/2022.01.12.476124)", 
+  bioRxiv 2022.01.12.476124; doi: https://doi.org/10.1101/2022.01.12.476124
 
 Installation
 -------------

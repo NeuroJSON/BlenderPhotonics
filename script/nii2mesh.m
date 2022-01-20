@@ -1,4 +1,37 @@
 function nii2mesh(filename)
+%
+% nii2mesh(filename)
+%
+% convert a volume image file (.nii/.nii.gz/.jnii/.bnii/.mat) to a tetrahedral mesh
+%
+% author: Qianqian Fang (q.fang at neu.edu)
+%         Yuxuan Zhang (zhang.yuxuan1 at northeastern.edu)
+%
+% input:
+%	 filename: path to the volume image file, accept NIfTI (.nii/.nii.gz), 
+%                  JNIfTI (.jnii), binary JNIfTI (.bnii) and MATLAB .mat file;
+%                  For .mat, the first 3-D array is read as the image
+%
+% output:
+%	 output are saved as file under the temporary folder bpmwpath('')
+%
+% license: GPLv3 or later, see LICENSE.txt for details
+%
+% reference: 
+% @article {BlenderPhotonics2022,
+%  author = {Zhang, Yuxuang and Fang, Qianqian},
+%  title = {{BlenderPhotonics -- a versatile environment for 3-D complex bio-tissue modeling and light transport simulations based on Blender}},
+%  elocation-id = {2022.01.12.476124},
+%  year = {2022},
+%  doi = {10.1101/2022.01.12.476124},
+%  publisher = {Cold Spring Harbor Laboratory},
+%  URL = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124},
+%  eprint = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124.full.pdf},
+%  journal = {bioRxiv}
+% }
+%
+% -- this function is part of BlenderPhotonics (http://mcx.space/bp)
+%
 
 input=loadjson(filename);
 niipath=input.niipath;

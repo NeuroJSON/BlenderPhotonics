@@ -1,3 +1,24 @@
+"""Blender2Surf - extracting, converting and processing Blender object surfaces
+
+* Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
+* License: GNU General Public License V3 or later (GPLv3)
+* Website: http://mcx.space/bp
+
+To cite this work, please use the below information
+
+@article {BlenderPhotonics2022,
+  author = {Zhang, Yuxuang and Fang, Qianqian},
+  title = {{BlenderPhotonics -- a versatile environment for 3-D complex bio-tissue modeling and light transport simulations based on Blender}},
+  elocation-id = {2022.01.12.476124},
+  year = {2022},
+  doi = {10.1101/2022.01.12.476124},
+  publisher = {Cold Spring Harbor Laboratory},
+  URL = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124},
+  eprint = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124.full.pdf},
+  journal = {bioRxiv}
+}
+"""
+
 import bpy
 from bpy_extras.io_utils import ImportHelper
 import numpy as np

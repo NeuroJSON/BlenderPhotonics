@@ -1,4 +1,45 @@
 function blender2surf(filename)
+%
+% blender2surf(filename)
+%
+% Load a JMesh surface mesh file and perform a specified surface processing
+%
+% author: Qianqian Fang (q.fang at neu.edu)
+%
+% input:
+%	 filename: the path to a JMesh file containing a surface mesh, the JSON tree must contain
+%           param.action: a string can be 'repair','smooth','reorient','simplify','remesh',
+%                 'boolean-and','boolean-or','boolean-xor','boolean-diff','boolean-first',
+%                 'boolean-second','boolean-decouple'
+%           param.level: a single number to be used for the respective action; 
+%                 for 'smooth': this indicates number of iterations
+%                 for 'simplify': this indicates percentage of edges to be kept
+%                 for 'boolean-*': a negative value (-1) suggests flipping the two input surfaces
+%           the structure should contain a single or multiple JMesh objects object(i), each should have
+%           object(i).MeshNode: an Nnx3 array for vertex coordinates
+%           object(i).MeshSurf: an Nex3 integer array for triangular surface elements
+%
+% output:
+%	 the processed surface mesh is saved as a JMesh file under the temporary folder bpmwpath('')
+%          surfacemesh.jmsh: contains the processed surface mesh
+%
+% license: GPLv3 or later, see LICENSE.txt for details
+%
+% reference: 
+% @article {BlenderPhotonics2022,
+%  author = {Zhang, Yuxuang and Fang, Qianqian},
+%  title = {{BlenderPhotonics -- a versatile environment for 3-D complex bio-tissue modeling and light transport simulations based on Blender}},
+%  elocation-id = {2022.01.12.476124},
+%  year = {2022},
+%  doi = {10.1101/2022.01.12.476124},
+%  publisher = {Cold Spring Harbor Laboratory},
+%  URL = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124},
+%  eprint = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124.full.pdf},
+%  journal = {bioRxiv}
+% }
+%
+% -- this function is part of BlenderPhotonics (http://mcx.space/bp)
+%
 
 blender=loadjson(filename, 'FastArrayParser',0);
 

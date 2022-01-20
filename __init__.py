@@ -1,3 +1,58 @@
+"""BlenderPhotonics - a Blender addon for 3-D mesh generation and Monte Carlo simulation
+
+* Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
+	   (c) 2021	 Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
+* License: GNU General Public License V3 or later (GPLv3)
+* Version: v2022 (v0.6.0)
+* Website: http://mcx.space/bp
+* Acknowledgement: This project is funded by NIH awards R01-GM114365 and U24-NS124027
+
+BlenderPhotonics is a Blender addon to enable 3-D tetrahedral mesh generation
+(via Iso2Mesh [1]) and mesh-based Monte Carlo (MMC) photon simulations (via
+MMCLAB [2]) inside the Blender environment. Both Iso2Mesh and MMCLAB are executed in
+GNU Octave, which interoperates with Blender via the "oct2py" module and the
+"bpy" Python interface. BlenderPhotonics also supports using MATLAB as the
+backend to run Iso2Mesh and MMCLAB via "matlab.engine" if installed.
+
+BlenderPhotonics combines the interactive 3-D shape creation/editing and
+advanced modeling capabilities provided by Blender with state-of-the-art
+Monte Carlo (MC) light simulation techniques and GPU acceleration. It uses
+Blender's user-friendly computer-aided-design (CAD) interface as the front-end
+to allow creations of complex domains, making it easy-to-use for less-experienced
+users to create sophisticated optical simulations needed for a wide range of
+biophotonics applications.
+
+Installing this module via Blender menu "Edit\Preference\Add-ons\Install..."
+enables the BlenderPhotonics panel. The BlenderPhotonics panel contains
+the following 4 submodules:
+
+* Blender2Mesh: converting Blender scene to volumetric tetrahedral mesh models
+* Volume2Mesh:  converting NIfTI/JNIfTI/.mat 3D volumes to tetrahedral mesh
+* Surface2Mesh: converting and processing triangular surface meshes
+* Multiphysics Simulations: configuring and executing MMC photon simulation
+
+For each module, a dialog showing detailed parameters and sub-feature allow
+users to adjust the meshing parameters or perform various modeling tasks.
+
+To cite this work, please use the below information
+
+@article {BlenderPhotonics2022,
+  author = {Zhang, Yuxuang and Fang, Qianqian},
+  title = {{BlenderPhotonics -- a versatile environment for 3-D complex bio-tissue modeling and light transport simulations based on Blender}},
+  elocation-id = {2022.01.12.476124},
+  year = {2022},
+  doi = {10.1101/2022.01.12.476124},
+  publisher = {Cold Spring Harbor Laboratory},
+  URL = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124},
+  eprint = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124.full.pdf},
+  journal = {bioRxiv}
+}
+
+[1] Iso2Mesh: http://iso2mesh.sf.net
+[2] MMCLAB:   http://mcx.space
+
+"""
+
 bl_info = {
     "name": "BlenderPhotonics",
     "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
