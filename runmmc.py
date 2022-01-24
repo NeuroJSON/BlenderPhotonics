@@ -105,10 +105,11 @@ class runmmc(bpy.types.Operator):
         bpy.ops.object.delete()
 
         outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'));
-        if (not isinstance(outputmesh['MeshSurf'], np.ndarray)):
-            outputmesh['MeshSurf']=np.asarray(outputmesh['MeshSurf'],dtype=np.uint32);
-        outputmesh['MeshSurf']-=1
-        AddMeshFromNodeFace(outputmesh['MeshNode'],outputmesh['MeshSurf'].tolist(),"Iso2Mesh");
+        outputmesh=JMeshFallback(outputmesh)
+        if (not isinstance(outputmesh['MeshTri3'], np.ndarray)):
+            outputmesh['MeshTri3']=np.asarray(outputmesh['MeshTri3'],dtype=np.uint32);
+        outputmesh['MeshTri3']-=1
+        AddMeshFromNodeFace(outputmesh['MeshVertex3'],outputmesh['MeshTri3'].tolist(),"Iso2Mesh");
         
         #add color to blender model
         obj = bpy.data.objects['Iso2Mesh']

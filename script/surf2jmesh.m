@@ -12,8 +12,8 @@ function nodedata=surf2jmesh(filename)
 %
 % output:
 %	 nodedata: a struct containing 
-%              MeshNode: an Nnx3 array for vertex coordinates
-%              MeshSurf: an Nex3 integer array for triangular surface elements
+%              MeshVertex3: an Nnx3 array for vertex coordinates
+%              MeshTri3: an Nex3 integer array for triangular surface elements
 %
 % license: GPLv3 or later, see LICENSE.txt for details
 %
@@ -34,14 +34,14 @@ function nodedata=surf2jmesh(filename)
 %
 
 if(regexp(filename,'\.[Oo][Ff][Ff]$'))
-    [nodedata.MeshNode, nodedata.MeshSurf]=readoff(filename);
+    [nodedata.MeshVertex3, nodedata.MeshTri3]=readoff(filename);
 elseif(regexp(filename,'\.[Mm][Ee][Dd][Ii][Tt]$'))
-    [nodedata.MeshNode, elem]=readmedit(filename);
-    nodedata.MeshSurf=volface(elem(:,1:4));
+    [nodedata.MeshVertex3, elem]=readmedit(filename);
+    nodedata.MeshTri3=volface(elem(:,1:4));
 elseif(regexp(filename,'\.[Ee][Ll][Ee]$'))
     [pathstr,name,ext] = fileparts(filename);
     [nodedata.node, elem]=readtetgen(fullfile(pathstr,name));
-    nodedata.MeshSurf=volface(elem(:,1:4));
+    nodedata.MeshTri3=volface(elem(:,1:4));
 elseif(regexp(filename,'\.[Jj][Mm][Ee]*[Ss][Hh]$'))
     nodedata=loadjson(filename);
 elseif(regexp(filename,'\.[Bb][Mm][Ee]*[Ss][Hh]$'))

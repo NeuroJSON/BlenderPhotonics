@@ -150,7 +150,7 @@ class scene2mesh(bpy.types.Operator):
 
         # Save file
         meshdata={'_DataInfo_': {'JMeshVersion': '0.5', 'Comment':'Created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)'},
-            'MeshNode':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
+            'MeshVertex3':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
         jd.save(meshdata,os.path.join(outputdir,'blendermesh.jmsh'))
 
         if(int(self.endstep)==5):

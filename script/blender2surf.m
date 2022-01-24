@@ -16,8 +16,8 @@ function blender2surf(filename)
 %                 for 'simplify': this indicates percentage of edges to be kept
 %                 for 'boolean-*': a negative value (-1) suggests flipping the two input surfaces
 %           the structure should contain a single or multiple JMesh objects object(i), each should have
-%           object(i).MeshNode: an Nnx3 array for vertex coordinates
-%           object(i).MeshSurf: an Nex3 integer array for triangular surface elements
+%           object(i).MeshVertex3: an Nnx3 array for vertex coordinates
+%           object(i).MeshTri3: an Nex3 integer array for triangular surface elements
 %
 % output:
 %	 the processed surface mesh is saved as a JMesh file under the temporary folder bpmwpath('')
@@ -50,53 +50,54 @@ end
 
 if(~isempty(regexp(blender.param.action,'repair')))
     for i=1:length(objs)
-        if(~iscell(objs{i}.MeshSurf))
-            [objs{i}.MeshNode, objs{i}.MeshSurf]=meshcheckrepair(objs{i}.MeshNode, objs{i}.MeshSurf, 'meshfix');
+        if(~iscell(objs{i}.MeshTri3))
+            [objs{i}.MeshVertex3, objs{i}.MeshTri3]=meshcheckrepair(objs{i}.MeshVertex3, objs{i}.MeshTri3, 'meshfix');
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'smooth')))
     for i=1:length(objs)
-        if(~iscell(objs{i}.MeshSurf))
-            objs{i}.MeshNode=sms(objs{i}.MeshNode, objs{i}.MeshSurf, blender.param.level);
+        if(~iscell(objs{i}.MeshTri3))
+            objs{i}.MeshVertex3=sms(objs{i}.MeshVertex3, objs{i}.MeshTri3, blender.param.level);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'reorient')))
     for i=1:length(objs)
-        if(~iscell(objs{i}.MeshSurf))
-            [objs{i}.MeshNode, objs{i}.MeshSurf]=surfreorient(objs{i}.MeshNode, objs{i}.MeshSurf);
+        if(~iscell(objs{i}.MeshTri3))
+            [objs{i}.MeshVertex3, objs{i}.MeshTri3]=surfreorient(objs{i}.MeshVertex3, objs{i}.MeshTri3);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'simplify')))
     for i=1:length(objs)
-        if(~iscell(objs{i}.MeshSurf))
-            [objs{i}.MeshNode, objs{i}.MeshSurf]=meshresample(objs{i}.MeshNode, objs{i}.MeshSurf, blender.param.level);
+        if(~iscell(objs{i}.MeshTri3))
+            [objs{i}.MeshVertex3, objs{i}.MeshTri3]=meshresample(objs{i}.MeshVertex3, objs{i}.MeshTri3, blender.param.level);
         end
     end
 end
 
 if(~isempty(regexp(blender.param.action,'remesh')))
     for i=1:length(objs)
-        if(~iscell(objs{i}.MeshSurf))
-            [objs{i}.MeshNode, objs{i}.MeshSurf]=surfboolean(objs{i}.MeshNode, objs{i}.MeshSurf, 'remesh', objs{i}.MeshNode, objs{i}.MeshSurf);
+        if(~iscell(objs{i}.MeshTri3))
+            [objs{i}.MeshVertex3, objs{i}.MeshTri3]=surfboolean(objs{i}.MeshVertex3, objs{i}.MeshTri3, 'remesh', objs{i}.MeshVertex3, objs{i}.MeshTri3);
         end
     end
 end
 
-op=regexp(blender.param.action,'boolean-[a-zA-Z]+','match')
+op=regexp(blender.param.action,'boolean-[a-zA-Z]+','match');
+
 if(~isempty(op))
     if(length(objs)==2)
         if(blender.param.level>=0)
-             [objs{1}.MeshNode, objs{1}.MeshSurf]=surfboolean(objs{1}.MeshNode, objs{1}.MeshSurf, regexprep(op{1},'boolean-',''), objs{2}.MeshNode, objs{2}.MeshSurf);
+             [objs{1}.MeshVertex3, objs{1}.MeshTri3]=surfboolean(objs{1}.MeshVertex3, objs{1}.MeshTri3, regexprep(op{1},'boolean-',''), objs{2}.MeshVertex3, objs{2}.MeshTri3);
         else
-             [objs{1}.MeshNode, objs{1}.MeshSurf]=surfboolean(objs{2}.MeshNode, objs{2}.MeshSurf, regexprep(op{1},'boolean-',''), objs{1}.MeshNode, objs{1}.MeshSurf);
+             [objs{1}.MeshVertex3, objs{1}.MeshTri3]=surfboolean(objs{2}.MeshVertex3, objs{2}.MeshTri3, regexprep(op{1},'boolean-',''), objs{1}.MeshVertex3, objs{1}.MeshTri3);
         end
-        objs{2}=[];
+        objs(2)=[];
     end
 end
 

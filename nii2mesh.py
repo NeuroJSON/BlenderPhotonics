@@ -75,7 +75,7 @@ class nii2mesh(bpy.types.Operator):
                 import matlab.engine as op
                 oc = op.start_matlab()
         except ImportError:
-            raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
+            raise ImportError('To run this feature, you must install the `oct2py` or `matlab.engine` Python module first, based on your choice of the backend')
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         oc.feval('nii2mesh',os.path.join(outputdir,'niipath.json'), nargout=0)
@@ -85,17 +85,18 @@ class nii2mesh(bpy.types.Operator):
         bpy.ops.object.delete()
 
         regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
+        regiondata=JMeshFallback(regiondata)
         n=len(regiondata.keys())-1
 
         # To import mesh.ply in batches
         for i in range (0,n):
-            surfkey='MeshSurf('+str(i+1)+')'
+            surfkey='MeshTri3('+str(i+1)+')'
             if(n==1):
-                surfkey='MeshSurf'
+                surfkey='MeshTri3'
             if (not isinstance(regiondata[surfkey], np.ndarray)):
                 regiondata[surfkey]=np.asarray(regiondata[surfkey],dtype=np.uint32);
             regiondata[surfkey]-=1
-            AddMeshFromNodeFace(regiondata['MeshNode'],regiondata[surfkey].tolist(),'region_'+str(i+1));
+            AddMeshFromNodeFace(regiondata['MeshVertex3'],regiondata[surfkey].tolist(),'region_'+str(i+1));
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
 

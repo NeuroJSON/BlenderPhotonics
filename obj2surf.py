@@ -132,17 +132,17 @@ class object2surf(bpy.types.Operator):
         if(len(surfdata['MeshGroup'])>0):
             ob=surfdata['MeshGroup']
             objname='surf_'+str(idx)
-            if('MeshNode' in ob):
+            if('MeshVertex3' in ob):
                 if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                     objname=ob['_DataInfo_']['BlenderObjectName']
-                AddMeshFromNodeFace(ob['MeshNode'],(np.array(ob['MeshSurf'])-1).tolist(),objname)
+                AddMeshFromNodeFace(ob['MeshVertex3'],(np.array(ob['MeshTri3'])-1).tolist(),objname)
                 bpy.context.view_layer.objects.active=bpy.data.objects[objname]
             else:
                 for ob in surfdata['MeshGroup']:
                     objname='surf_'+str(idx)
                     if(('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_'])):
                         objname=ob['_DataInfo_']['BlenderObjectName']
-                    AddMeshFromNodeFace(ob['MeshNode'],(np.array(ob['MeshSurf'])-1).tolist(),objname)
+                    AddMeshFromNodeFace(ob['MeshVertex3'],(np.array(ob['MeshTri3'])-1).tolist(),objname)
                     bpy.context.view_layer.objects.active=bpy.data.objects[objname]
                     idx+=1
 
@@ -221,7 +221,7 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
         oc = op.Oct2Py()
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         surfdata=oc.feval('surf2jmesh',self.filepath)
-        AddMeshFromNodeFace(surfdata['MeshNode'],(np.array(surfdata['MeshSurf'])-1).tolist(),'importedsurf')
+        AddMeshFromNodeFace(surfdata['MeshVertex3'],(np.array(surfdata['MeshTri3'])-1).tolist(),'importedsurf')
 
         return {'FINISHED'}
 

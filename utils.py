@@ -42,10 +42,10 @@ def GetNodeFacefromObject(obj, istrimesh=True):
     v = np.array(verts)
     try:
         f = np.array(faces)
-        return {'MeshNode':v, 'MeshSurf':f}
+        return {'MeshVertex3':v, 'MeshTri3':f}
     except:
         f = faces
-    return {'_DataInfo_':{'BlenderObjectName',obj.name},'MeshNode':v, 'MeshPoly':f}
+    return {'_DataInfo_':{'BlenderObjectName',obj.name},'MeshVertex3':v, 'MeshPoly':f}
 
 def AddMeshFromNodeFace(node,face,name):
 
@@ -78,20 +78,27 @@ def LoadReginalMesh(meshdata, name):
     # To import mesh.ply in batches
     bbx={'min': np.array([np.inf, np.inf, np.inf]), 'max': np.array([-np.inf, -np.inf, -np.inf])}
     for i in range (0,n):
-        surfkey='MeshSurf('+str(i+1)+')'
+        surfkey='MeshTri3('+str(i+1)+')'
         if(n==1):
-            surfkey='MeshSurf'
+            surfkey='MeshTri3'
         if (not isinstance(meshdata[surfkey], np.ndarray)):
             meshdata[surfkey]=np.asarray(meshdata[surfkey],dtype=np.uint32);
         meshdata[surfkey]-=1
-        bbx['min']=np.amin(np.vstack((bbx['min'], np.amin(meshdata['MeshNode'],axis=0))), axis=0)
-        bbx['max']=np.amax(np.vstack((bbx['max'], np.amax(meshdata['MeshNode'],axis=0))), axis=0)
-        AddMeshFromNodeFace(meshdata['MeshNode'],meshdata[surfkey].tolist(),name+str(i+1))
+        bbx['min']=np.amin(np.vstack((bbx['min'], np.amin(meshdata['MeshVertex3'],axis=0))), axis=0)
+        bbx['max']=np.amax(np.vstack((bbx['max'], np.amax(meshdata['MeshVertex3'],axis=0))), axis=0)
+        AddMeshFromNodeFace(meshdata['MeshVertex3'],meshdata[surfkey].tolist(),name+str(i+1))
     print(bbx)
     return bbx
 
 def LoadTetMesh(meshdata,name):
-        if (not isinstance(meshdata['MeshSurf'], np.ndarray)):
-            meshdata['MeshSurf']=np.asarray(meshdata['MeshSurf'],dtype=np.uint32);
-        meshdata['MeshSurf']-=1
-        AddMeshFromNodeFace(meshdata['MeshNode'],meshdata['MeshSurf'].tolist(),name);
+        if (not isinstance(meshdata['MeshTri3'], np.ndarray)):
+            meshdata['MeshTri3']=np.asarray(meshdata['MeshTri3'],dtype=np.uint32);
+        meshdata['MeshTri3']-=1
+        AddMeshFromNodeFace(meshdata['MeshVertex3'],meshdata['MeshTri3'].tolist(),name);
+
+def JMeshFallback(meshobj):
+        if('MeshSurf' in meshobj) and (not ('MeshTri3' in meshobj)):
+            meshobj['MeshTri3']=meshobj.pop('MeshSurf')
+        if('MeshNode' in meshobj) and (not ('MeshVertex3' in meshobj)):
+            meshobj['MeshVertex3']=meshobj.pop('MeshNode')
+        return meshobj
