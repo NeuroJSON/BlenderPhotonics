@@ -102,7 +102,7 @@ class object2surf(bpy.types.Operator):
 
         surfdata['param']={'action':self.action, 'level':self.actionparam}
 
-        jd.save(surfdata,os.path.join(outputdir,'blendersurf.jmsh'),indent=2)
+        jd.save(surfdata,os.path.join(outputdir,'blendersurf.jmsh'))
 
         # at this point, objects are converted to mesh if possible
         if(self.action == 'export'):
