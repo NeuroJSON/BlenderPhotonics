@@ -61,12 +61,12 @@ class mesh2scene(bpy.types.Operator):
         dg = bpy.context.evaluated_depsgraph_get()
         dg.update()
 
-        ## add cfg option
+        # add cfg option
         obj = bpy.data.objects['source']
         obj["nphoton"] = 10000
-        obj["srctype"]="pencil"
-        obj["srcparam1"]=[0,0,0,0]
-        obj["srcparam2"]=[0,0,0,0]
+        obj["srctype"] = "pencil"
+        obj["srcparam1"] = [0.0, 0.0, 0.0, 0.0]
+        obj["srcparam2"] = [0.0, 0.0, 0.0, 0.0]
         obj["unitinmm"] = 1.0
 
     def execute(self, context):
