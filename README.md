@@ -29,11 +29,11 @@ It uses Blender's user-friendly computer-aided-design (CAD) interface as the fro
 of complex domains, making it easy-to-use for less-experienced users to create sophisticated optical
 simulations needed for a wide range of biophotonics applications.
 
-The details of this work can be found in the below preprint:
+If you use BlenderPhotonics in your research, please cite the below paper:
 
-- Yuxuang Zhang and Qianqian Fang, "[BlenderPhotonics – a versatile environment for 3-D complex bio-tissue
-  modeling and light transport simulations based on Blender](https://doi.org/10.1101/2022.01.12.476124)", 
-  bioRxiv 2022.01.12.476124; doi: https://doi.org/10.1101/2022.01.12.476124
+- Yuxuan Zhang and Qianqian Fang, "[BlenderPhotonics: an integrated open-source software environment for
+  three-dimensional meshing and photon simulations in complex tissues](https://doi.org/10.1117/1.JBO.27.8.083014)",
+  J. of Biomedical Optics, 27(8), 083014 (2022) doi: https://doi.org/10.1117/1.JBO.27.8.083014
 
 Installation
 -------------
@@ -73,7 +73,13 @@ Installation
    addpath('/path/to/zmat');
    ```
    **How to verify: start octave, and type `which s2m`, `which zmat` and `which mmc`, you should see their paths printed**
-7. Install BlenderPhotonics in Blender
+7. type `mmc` and enter in Octave command window, if you see the error message 
+   **"liboctinterp.so.4: cannot open shared object file: No such file or directory"**,
+   this suggest that you are using an Octave newer than the version that was used to compile `mmc.mex`. To solve
+   this issue, you must run `sudo ln -s /usr/lib/x86_64-linux-gnu/liboctinterp.so.7 /usr/lib/x86_64-linux-gnu/liboctinterp.so.4`
+   or recompile mmc.mex by downloading the source code.
+   see this [mailing list post](https://groups.google.com/g/mcx-users/c/Kj4OZybYfAA/m/yjXXvVi4AgAJ) for details.
+8. Install BlenderPhotonics in Blender
     1. Download BlenderPhotonics from Github: https://github.com/COTILab/BlenderPhotonics/
     2. Start Blender, select menu **Edit\Preferences\Add-ons**, then click the **Install ...** button, browse
        the downloaded .zip file. Blender will load the addon and show it as **User Interface: BlenderPhotonics**, 

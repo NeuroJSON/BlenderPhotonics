@@ -14,17 +14,19 @@ function tempname=bpmwpath(fname)
 %
 % license: GPLv3 or later, see LICENSE.txt for details
 %
-% reference: 
-% @article {BlenderPhotonics2022,
-%  author = {Zhang, Yuxuang and Fang, Qianqian},
-%  title = {{BlenderPhotonics -- a versatile environment for 3-D complex bio-tissue modeling and light transport simulations based on Blender}},
-%  elocation-id = {2022.01.12.476124},
-%  year = {2022},
-%  doi = {10.1101/2022.01.12.476124},
-%  publisher = {Cold Spring Harbor Laboratory},
-%  URL = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124},
-%  eprint = {https://www.biorxiv.org/content/early/2022/01/14/2022.01.12.476124.full.pdf},
-%  journal = {bioRxiv}
+% reference:
+%
+% @article{BlenderPhotonics2022,
+%   author = {Yuxuan Zhang and Qianqian Fang},
+%   title = {{BlenderPhotonics: an integrated open-source software environment for three-dimensional meshing and photon simulations in complex tissues}},
+%   volume = {27},
+%   journal = {Journal of Biomedical Optics},
+%   number = {8},
+%   publisher = {SPIE},
+%   pages = {1 -- 23},
+%   year = {2022},
+%   doi = {10.1117/1.JBO.27.8.083014},
+%   URL = {https://doi.org/10.1117/1.JBO.27.8.083014}
 % }
 %
 % -- this function is part of BlenderPhotonics (http://mcx.space/bp)
