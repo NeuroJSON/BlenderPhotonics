@@ -1,7 +1,7 @@
 """BlenderPhotonics - a Blender addon for 3-D mesh generation and Monte Carlo simulation
 
 * Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
-	   (c) 2021	 Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
+           (c) 2021	 Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
 * License: GNU General Public License V3 or later (GPLv3)
 * Version: v2022 (v0.6.0)
 * Website: http://mcx.space/bp
@@ -22,7 +22,7 @@ to allow creations of complex domains, making it easy-to-use for less-experience
 users to create sophisticated optical simulations needed for a wide range of
 biophotonics applications.
 
-Installing this module via Blender menu "Edit\Preference\Add-ons\Install..."
+Installing this module via Blender menu "Edit\\Preference\\Add-ons\\Install..."
 enables the BlenderPhotonics panel. The BlenderPhotonics panel contains
 the following 4 submodules:
 
@@ -38,7 +38,8 @@ To cite this work, please use the below information
 
 @article{BlenderPhotonics2022,
   author = {Yuxuan Zhang and Qianqian Fang},
-  title = {{BlenderPhotonics: an integrated open-source software environment for three-dimensional meshing and photon simulations in complex tissues}},
+  title = {{BlenderPhotonics: an integrated open-source software environment for three-dimensional meshing and photon
+   simulations in complex tissues}},
   volume = {27},
   journal = {Journal of Biomedical Optics},
   number = {8},
@@ -54,18 +55,6 @@ To cite this work, please use the below information
 
 """
 
-bl_info = {
-    "name": "BlenderPhotonics",
-    "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
-    "version": (1, 0),  # min plug-in version
-    "blender": (2, 82, 0),  # min blender version
-    "location": "Layout，UI",
-    "description": "An integrated 3D mesh generation and Monte Carlo photon transport simulation environment",
-    "warning": "This plug-in requires the preinstallation of Iso2Mesh (http://iso2mesh.sf.net) and MMCLAB (http://mcx.space)",
-    "doc_url": "https://github.com/COTILab/BlenderPhotonics",
-    "tracker_url": "https://github.com/COTILab/BlenderPhotonics/issues",
-    "category": "User Interface",
-}
 import bpy
 from .ui import BlenderPhotonics_UI
 from .blender2mesh import scene2mesh
@@ -75,6 +64,22 @@ from .runmmc import runmmc
 from .niifile import niifile
 from .nii2mesh import nii2mesh
 from bpy.props import PointerProperty
+
+
+bl_info = {
+    "name": "BlenderPhotonics",
+    "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
+    "version": (1, 0),  # min plug-in version
+    "blender": (2, 82, 0),  # min blender version
+    "location": "Layout，UI",
+    "description": "An integrated 3D mesh generation and Monte Carlo photon transport simulation environment",
+    "warning": "This plug-in requires the preinstallation of Iso2Mesh (http://iso2mesh.sf.net) and "
+               "MMCLAB (http://mcx.space)",
+    "doc_url": "https://github.com/COTILab/BlenderPhotonics",
+    "tracker_url": "https://github.com/COTILab/BlenderPhotonics/issues",
+    "category": "User Interface",
+}
+
 
 def register():
     print("Registering BlenderPhotonics")
@@ -98,4 +103,3 @@ def unregister():
     bpy.utils.unregister_class(runmmc)
     bpy.utils.unregister_class(BlenderPhotonics_UI)
     del bpy.types.Scene.blender_photonics
-
