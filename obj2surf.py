@@ -226,7 +226,7 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator, ImportHelper):
     bl_label = "Import Mesh"
     bl_description = "Import triangular surfaces in .json,.jmsh,.bmsh,.off,.medit,.stl,.smf,.gts"
 
-    filename_ext = "*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts"
+    filename_ext: bpy.props.StringProperty(default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts")
     filepath: bpy.props.StringProperty(default='', subtype='DIR_PATH')
     filter_glob: bpy.props.StringProperty(
         default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
