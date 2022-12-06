@@ -169,9 +169,12 @@ class scene2mesh(bpy.types.Operator):
         try:
             if bpy.context.scene.blender_photonics.backend == "octave":
                 import oct2py as op
+                from oct2py.utils import Oct2PyError as OcError1
+                OcError2 = OcError1
                 oc = op.Oct2Py()
             else:
                 import matlab.engine as op
+                from matlab.engine import MatlabExecutionError as OcError1, RejectedExecutionError as OcError2
                 oc = op.start_matlab()
         except ImportError:
             raise ImportError(
@@ -180,7 +183,13 @@ class scene2mesh(bpy.types.Operator):
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
 
-        oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nout=0)
+        try:
+            oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nargout=0)
+        except OcError1 as e:
+            if 'too many outputs' in e.args[0]:
+                oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nout=0)
+            else:
+                raise
 
         # import volume mesh to blender(just for user to check the result)
         bpy.ops.object.mode_set(mode='OBJECT')
