@@ -13,27 +13,7 @@ BlenderPhotonics
 
 Introduction
 -------------
-BlenderPhotonics is a Blender addon to enable 3-D tetrahedral mesh generation (via [Iso2Mesh](http://iso2mesh.sf.net))
-and mesh-based Monte Carlo (MMC) photon simulations (via [MMCLAB](http://mcx.space/wiki/?Learn#mmclab)) inside
-the Blender environment. Both Iso2Mesh and MMCLAB are executed in GNU Octave, which interoperates with Blender
-via the `oct2py` module and the `bpy` Python interface.
-
-BlenderPhotonics supports three processing workflows: 1) converting 3-D Blender objects to region-labeled
-tetrahedral meshes and triangular surfaces; 2) converting a volumetric image stored in a NIfTI file to a
-multi-labeled tetrahedral mesh, and 3) defining optical properties of each region and a light source to
-execute and render MMC simulation results. Each feature can be achieved via a single click on the GUI.
-
-BlenderPhotonics combines the interactive 3-D shape creation/editing and advanced modeling capabilities 
-provided by Blender with state-of-the-art Monte Carlo (MC) light simulation techniques and GPU acceleration. 
-It uses Blender's user-friendly computer-aided-design (CAD) interface as the front-end to allow creations 
-of complex domains, making it easy-to-use for less-experienced users to create sophisticated optical
-simulations needed for a wide range of biophotonics applications.
-
-If you use BlenderPhotonics in your research, please cite the below paper:
-
-- Yuxuan Zhang and Qianqian Fang, "[BlenderPhotonics: an integrated open-source software environment for
-  three-dimensional meshing and photon simulations in complex tissues](https://doi.org/10.1117/1.JBO.27.8.083014)",
-  J. of Biomedical Optics, 27(8), 083014 (2022) doi: https://doi.org/10.1117/1.JBO.27.8.083014
+BlenderPhotonics_MCX is vari
 
 Installation
 -------------
@@ -97,3 +77,12 @@ Main Interface
 -------------
 ![](http://neurojson.org/wiki/upload/blenderphotonics_menu.png)
 
+vdb开发踩坑： 
+1. numpy数组写入vdb文件需要保证数据类型为float
+2. 出于未知原因，mcx或者iso2mesh输出的3D voxel array直接copy到vdb文件导致位置混乱，将3D voxel array转置后写入，然后在blender显示画面时翻转模型暂时避免了这一问题
+3. voxelization操作导致模型变大，blender中使用缩放避免模型变化。后台运算时使用仍然大模型。
+4. 目前遇到的仿射变换矩阵拥有相等的xyz放缩比例，尚不知道这一关系是否恒成立
+5. savejson函数在octave中保存3D matrix速度明显慢于mat文件，因此暂时使用ImageMesh.mat保存模型信息
+6. 未来可能加入更多的colormap，另外Matlab的colormap是有版权的。。。
+7. octave的loadnifti函数和matlab给出了不同结果？？？另外似乎不是所有的hdr，img文件都能顺利读取成vol格式。
+8. UI界面需要大量优化。
