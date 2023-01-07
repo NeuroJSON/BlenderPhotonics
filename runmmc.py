@@ -135,7 +135,7 @@ class runmmc(bpy.types.Operator):
 
             colorbit = 10
             colorkind = 2 ** colorbit - 1
-            weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']), np.min(mmcoutput['logflux']))
+            weight_data = normalize(mmcoutput['fluxlog'])
             weight_data_test = np.rint(weight_data * (colorkind))
 
             new_vertex_group = obj.vertex_groups.new(name='weight')
