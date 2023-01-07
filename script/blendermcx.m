@@ -1,4 +1,4 @@
-function blendermmc(paramfile, meshfile)
+function blendermcx(paramfile, meshfile)
 %
 % blendermmc(paramfile, meshfile)
 %

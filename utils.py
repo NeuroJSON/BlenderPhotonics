@@ -164,14 +164,19 @@ def LoadVolMesh(mesh_np, id, path, mode, colormap='jet'):
     elif mode == 'result_view':
         obj = bpy.data.objects['MCX_result']
         obj.data.materials.append(bpy.data.materials["mcx_material"])
-
-    obj.scale = [mesh_np['scale'][0, 0], mesh_np['scale'][1, 1], mesh_np['scale'][2, 2]]
+    try:
+        obj.scale = [mesh_np['scale'][0, 0], mesh_np['scale'][1, 1], mesh_np['scale'][2, 2]]
+    except:
+        pass
     bpy.ops.transform.rotate(value=-math.pi/2, orient_axis='Y')
     bpy.ops.transform.mirror(orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
                              orient_matrix_type='GLOBAL', constraint_axis=(False, False, True))
-    bpy.ops.transform.translate(value=(mesh_np['scale'][0, 3], mesh_np['scale'][1, 3], mesh_np['scale'][2, 3]),
+    try:
+        bpy.ops.transform.translate(value=(mesh_np['scale'][0, 3], mesh_np['scale'][1, 3], mesh_np['scale'][2, 3]),
                                 orient_axis_ortho='X', orient_type='GLOBAL',
                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+    except:
+        pass
 
     bpy.context.scene.render.engine = 'CYCLES'
     try:

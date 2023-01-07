@@ -47,8 +47,11 @@ end
 
 %% perform mesh generation
 [node,elem]=s2m(blender.MeshVertex3,blender.MeshPoly,blender.param.keepratio,blender.param.maxvol,'tetgen1.5',[],[],blender.param.tetgenopt);
-[image, scale] = s2v(node, elem, blender.param.div, 'label',1);
-save('-v7',bpmwpath('ImageMesh.mat'),'image', 'scale');
-disp(['begin to save region mesh'])
+save('-v7',bpmwpath('meshdata.mat'),'node','elem');
+if (blender.param.div);
+    [image, scale] = s2v(node, elem, blender.param.div, 'label',1);
+    save('-v7',bpmwpath('ImageMesh.mat'),'image', 'scale');
+end
 
+disp(['begin to save region mesh'])
 blendersavemesh(node,elem);

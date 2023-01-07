@@ -62,7 +62,8 @@ class scene2mesh(bpy.types.Operator):
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", items = enum_endstep)
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
-    voxeldiv: bpy.props.FloatProperty(default=g_voxeldiv, name="division number along the shortest edge of the mesh (resolution)")
+    voxeldiv: bpy.props.IntProperty(default=g_voxeldiv, name="division number along the shortest edge of the mesh "
+                                                             "(resolution), 0 to disable")
     colormap: bpy.props.StringProperty(default=g_colormap,name="color scheme")
 
     @classmethod
@@ -188,9 +189,20 @@ class scene2mesh(bpy.types.Operator):
             bpy.data.objects.remove(obj)
         bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-        outputmesh=oc.load(os.path.join(outputdir,'ImageMesh.mat'))
-        LoadVolMesh(outputmesh,'Iso2Mesh', outputdir, mode='model_view', colormap=self.colormap)
-        bpy.context.view_layer.objects.active=bpy.data.objects['Iso2Mesh']
+        if self.voxeldiv:
+            outputmesh=oc.load(os.path.join(outputdir,'ImageMesh.mat'))
+            LoadVolMesh(outputmesh,'Iso2Mesh', outputdir, mode='model_view', colormap=self.colormap)
+            bpy.context.view_layer.objects.active=bpy.data.objects['Iso2Mesh']
+        else:
+            if (not self.onlysurf):
+                outputmesh = jd.load(os.path.join(outputdir, 'volumemesh.jmsh'))
+                LoadTetMesh(outputmesh, 'Iso2Mesh')
+                bpy.context.view_layer.objects.active = bpy.data.objects['Iso2Mesh']
+            else:
+                regiondata = jd.load(os.path.join(outputdir, 'regionmesh.jmsh'))
+                if (len(regiondata.keys()) > 0):
+                    LoadReginalMesh(regiondata, 'region_')
+                    bpy.context.view_layer.objects.active = bpy.data.objects['region_1']
 
 
         # at this point, if successful, iso2mesh generated mesh objects are imported into blender
