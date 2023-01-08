@@ -91,5 +91,11 @@ flux=mmclab(cfg);
 %% Post-processing simulation result
 
 fluxlog = log10(flux.data+1);
-save('-v7',bpmwpath('Mcx_result.mat'),'fluxlog');
-savejson('',struct('fluxlog',fluxlog(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
+if cfg.method=='grid'
+    save('-v7',bpmwpath('Mcx_result.mat'),'fluxlog');
+end
+
+% save data only whem elem is enable
+if cfg.method=='elem':
+    savejson('',struct('fluxlog',fluxlog(:)'),'FileName',bpmwpath('mmcoutput.json'),'ArrayIndent',0);
+end
