@@ -86,11 +86,8 @@ if(strcmp(method,'cgalmesh'))
     isovalue=[];
 end
 
-[node,elem,face]=v2m(vol.NIFTIData,isovalue,opt,maxvol,method);
+image = vol.NIFTIData;
+scale = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,0];
 
 %% post processing, scale mesh with the voxel size 0.1 mm
-node=node(:,1:3);
-elem(:,1:4)=meshreorient(node(:,1:3),elem(:,1:4));
-save('-v7',bpmwpath('meshdata.mat'),'node','elem','face');
-
-blendersavemesh(node,elem);
+save('-v7',bpmwpath('ImageMesh.mat'),'image', 'scale');

@@ -82,26 +82,15 @@ class nii2mesh(bpy.types.Operator):
         oc.feval('nii2mesh',os.path.join(outputdir,'niipath.json'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete()
+        for obj in bpy.data.objects:
+            bpy.data.objects.remove(obj)
+        bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-        regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'));
-        regiondata=JMeshFallback(regiondata)
-        n=len(regiondata.keys())-1
+        outputmesh = oc.load(os.path.join(outputdir, 'ImageMesh.mat'))
+        LoadVolMesh(outputmesh, 'Iso2Mesh', outputdir, mode='model_view')
+        bpy.context.view_layer.objects.active = bpy.data.objects['Iso2Mesh']
 
-        # To import mesh.ply in batches
-        for i in range (0,n):
-            surfkey='MeshTri3('+str(i+1)+')'
-            if(n==1):
-                surfkey='MeshTri3'
-            if (not isinstance(regiondata[surfkey], np.ndarray)):
-                regiondata[surfkey]=np.asarray(regiondata[surfkey],dtype=np.uint32);
-            regiondata[surfkey]-=1
-            AddMeshFromNodeFace(regiondata['MeshVertex3'],regiondata[surfkey].tolist(),'region_'+str(i+1));
-
-        bpy.context.space_data.shading.type = 'WIREFRAME'
-
-        ShowMessageBox("Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'", "BlenderPhotonics")
+        ShowMessageBox("Mesh generation is complete.'", "BlenderPhotonics")
 
     def execute(self, context):
         self.vol2mesh()

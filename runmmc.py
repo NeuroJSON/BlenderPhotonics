@@ -30,13 +30,17 @@ from .utils import *
 g_nphoton=10000
 g_tend=5e-9
 g_tstep=5e-9
-g_method="elem"
+g_method="grid"
 g_outputtype="flux"
 g_isreflect=True
 g_isnormalized=True
 g_basisorder=1
 g_debuglevel="TP"
 g_gpuid="1"
+g_colormap ="jet"
+g_tool = '1'
+enum_tool=[('1','MCX','Run MCX'),
+           ('2', 'MMC', 'Run MMC')]
 
 
 class runmmc(bpy.types.Operator):
@@ -47,6 +51,7 @@ class runmmc(bpy.types.Operator):
     # creat a interface to set uesrs' model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
+    tool: bpy.props.EnumProperty(default=g_tool, name='Light simulation tool', items = enum_tool)
     nphoton: bpy.props.FloatProperty(default=g_nphoton, name="Photon number")
     tend: bpy.props.FloatProperty(default=g_tend,name="Time gate width (s)")
     tstep: bpy.props.FloatProperty(default=g_tstep,name="Time gate step (s)")
@@ -57,16 +62,22 @@ class runmmc(bpy.types.Operator):
     outputtype: bpy.props.EnumProperty(default=g_outputtype, name="Output quantity", items = [('flux','flux: fluence rate','fluence rate (J/mm^2/s)'),('fluence','fluence: fluence (J/mm^2)','fluence in J/mm^2'),('energy','energy: energy density J/mm^3','energy density J/mm^3')])
     gpuid: bpy.props.StringProperty(default=g_gpuid,name="GPU ID (01 mask,-1=CPU)")
     debuglevel: bpy.props.StringProperty(default=g_debuglevel,name="Debug flag [MCBWDIOXATRPE]")
+    colormap: bpy.props.StringProperty(default=g_colormap, name="color scheme")
 
     def preparemmc(self):
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         cfg = [] # location, direction, photon number, Type,
 
-        for obj in bpy.data.objects[0:-1]:
-            if(not ("mua" in obj)):
-                continue
-            parameters.append([obj["mua"],obj["mus"],obj["g"],obj["n"]])
+        try:
+            obj = bpy.data.objects["Iso2Mesh"]
+            for prop in obj.data.keys():
+                parameters.append(obj.data[prop].to_list())
+        except:
+            for obj in bpy.data.objects[0:-1]:
+                if(not ("mua" in obj)):
+                    continue
+                parameters.append([obj["mua"],obj["mus"],obj["g"],obj["n"]])
 
         obj = bpy.data.objects['source']
         location =  np.array(obj.location).tolist();
@@ -99,42 +110,46 @@ class runmmc(bpy.types.Operator):
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
 
-        oc.feval('blendermmc',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'), nargout=0)
+        if (int(self.tool) == 1):
+            oc.feval('blendermcx',os.path.join(outputdir,'mmcinfo.json'), os.path.join(outputdir,'ImageMesh.mat'), nargout=0)
+        elif ((int(self.tool) == 2)):
+            oc.feval('blendermmc', os.path.join(outputdir, 'mmcinfo.json'), os.path.join(outputdir,'meshdata.mat'),nargout=0)
 
         #remove all object and import all region as one object
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete()
+        for obj in bpy.data.objects:
+            bpy.data.objects.remove(obj)
+        bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-        outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'));
-        outputmesh=JMeshFallback(outputmesh)
-        if (not isinstance(outputmesh['MeshTri3'], np.ndarray)):
-            outputmesh['MeshTri3']=np.asarray(outputmesh['MeshTri3'],dtype=np.uint32);
-        outputmesh['MeshTri3']-=1
-        AddMeshFromNodeFace(outputmesh['MeshVertex3'],outputmesh['MeshTri3'].tolist(),"Iso2Mesh");
-        
-        #add color to blender model
-        obj = bpy.data.objects['Iso2Mesh']
-        mmcoutput=jd.load(os.path.join(outputdir,'mmcoutput.json'));
-        mmcoutput['logflux']=np.asarray(mmcoutput['logflux'], dtype='float32');
+        if self.method=='elem':
+            outputmesh = jd.load(os.path.join(outputdir, 'volumemesh.jmsh'));
+            outputmesh = JMeshFallback(outputmesh)
+            if (not isinstance(outputmesh['MeshTri3'], np.ndarray)):
+                outputmesh['MeshTri3'] = np.asarray(outputmesh['MeshTri3'], dtype=np.uint32);
+            outputmesh['MeshTri3'] -= 1
+            AddMeshFromNodeFace(outputmesh['MeshVertex3'], outputmesh['MeshTri3'].tolist(), "Iso2Mesh");
 
-        def normalize(x,max,min):
-            x=(x-min)/(max-min);
-            return(x)
+            # add color to blender model
+            obj = bpy.data.objects['Iso2Mesh']
+            mmcoutput = jd.load(os.path.join(outputdir, 'mmcoutput.json'));
+            mmcoutput['fluxlog'] = np.asarray(mmcoutput['fluxlog'], dtype='float32');
 
-        colorbit=10
-        colorkind=2**colorbit-1
-        weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']),np.min(mmcoutput['logflux']))
-        weight_data_test =np.rint(weight_data*(colorkind))
+            colorbit = 10
+            colorkind = 2 ** colorbit - 1
+            weight_data = normalize(mmcoutput['fluxlog'])
+            weight_data_test = np.rint(weight_data * (colorkind))
 
-        new_vertex_group = obj.vertex_groups.new(name='weight')
-        for i in range(colorkind+1):
-            ind=np.array(np.where(weight_data_test==i)).tolist()
-            new_vertex_group.add(ind[0], i/colorkind, 'ADD')
+            new_vertex_group = obj.vertex_groups.new(name='weight')
+            for i in range(colorkind + 1):
+                ind = np.array(np.where(weight_data_test == i)).tolist()
+                new_vertex_group.add(ind[0], i / colorkind, 'ADD')
 
-        bpy.context.view_layer.objects.active=obj
-        bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
 
-        bpy.context.space_data.shading.type = 'SOLID'
+            bpy.context.space_data.shading.type = 'SOLID'
+        elif self.method=='grid':
+            outputmesh=oc.load(os.path.join(outputdir,'Mcx_result.mat'))
+            LoadVolMesh(outputmesh,'MCX_result', outputdir, mode='result_view', colormap=self.colormap)
 
         print('Finshed!, Please change intereaction mode to Weight Paint to see result!')
         print('''If you prefer a perspective effect，please go to edit mode and make sure shading 'Vertex Group Weight' is on.''')

@@ -55,7 +55,7 @@ To cite this work, please use the below information
 """
 
 bl_info = {
-    "name": "BlenderPhotonics",
+    "name": "BlenderPhotonics_mcx",
     "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
     "version": (1, 0),  # min plug-in version
     "blender": (2, 82, 0),  # min blender version
@@ -77,7 +77,7 @@ from .nii2mesh import nii2mesh
 from bpy.props import PointerProperty
 
 def register():
-    print("Registering BlenderPhotonics")
+    print("Registering BlenderPhotonics_mcx")
     bpy.utils.register_class(scene2mesh)
     bpy.utils.register_class(object2surf)
     bpy.utils.register_class(niifile)
@@ -89,7 +89,7 @@ def register():
 
 
 def unregister():
-    print("Unregistering BlenderPhotonics")
+    print("Unregistering BlenderPhotonics_mcx")
     bpy.utils.unregister_class(scene2mesh)
     bpy.utils.unregister_class(object2surf)
     bpy.utils.unregister_class(niifile)

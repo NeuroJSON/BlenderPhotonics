@@ -30,11 +30,11 @@ from .nii2mesh import nii2mesh
 from .obj2surf import object2surf
 
 class BlenderPhotonics_UI(bpy.types.Panel):
-    bl_label = 'BlenderPhotonics v2022'
+    bl_label = 'BlenderPhotonics_mcx v2022'
     bl_idname = 'BLENDERPHOTONICS_PT_UI'
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "BlenderPhotonics"
+    bl_category = "BlenderPhotonics_mcx"
 
     @classmethod
     def poll(self,context):

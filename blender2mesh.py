@@ -36,6 +36,8 @@ g_onlysurf=False
 g_convtri=True
 g_endstep='9'
 g_tetgenopt=""
+g_voxeldiv = 50
+g_colormap = 'jet'
 enum_endstep=[('1','Step 1: Convert objects to mesh','Convert objects to mesh'),
              ('2','Step 2: Join all objects','Join all objects'),
              ('3','Step 3: Intersect objects','Intersect objects'),
@@ -45,8 +47,8 @@ enum_endstep=[('1','Step 1: Convert objects to mesh','Convert objects to mesh'),
              ('9','Run all steps','Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)')]
 
 class scene2mesh(bpy.types.Operator):
-    bl_label = 'Convert scene to tetra mesh'
-    bl_description = "Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)"
+    bl_label = 'Convert scene to voxel mesh'
+    bl_description = "Create 3-D voxelization meshes using Iso2Mesh and Octave (please save your Blender session first!)"
     bl_idname = 'blenderphotonics.create3dmesh'
 
     # creat a interface to set uesrs' model parameter.
@@ -60,6 +62,9 @@ class scene2mesh(bpy.types.Operator):
     convtri: bpy.props.BoolProperty(default=g_convtri,name="Convert to triangular mesh first)")
     endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", items = enum_endstep)
     tetgenopt: bpy.props.StringProperty(default=g_tetgenopt,name="Additional tetgen flags")
+    voxeldiv: bpy.props.IntProperty(default=g_voxeldiv, name="division number along the shortest edge of the mesh "
+                                                             "(resolution), 0 to disable")
+    colormap: bpy.props.StringProperty(default=g_colormap,name="color scheme")
 
     @classmethod
     def description(cls, context, properties):
@@ -136,22 +141,26 @@ class scene2mesh(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         obj = bpy.context.view_layer.objects.active
-        verts = []
-        for n in range(len(obj.data.vertices)):
-            vert = obj.data.vertices[n].co
-            v_global = obj.matrix_world @ vert
-            verts.append(v_global)
-        edges = [edge.vertices[:] for edge in obj.data.edges]
-        faces = [(np.array(face.vertices[:])+1).tolist() for face in obj.data.polygons]
-        v = np.array(verts)
-        if(self.convtri):
-            f = np.array(faces)
+
+        vert = np.zeros(3 * len(obj.data.vertices))
+        obj.data.vertices.foreach_get('co', vert)
+        v = vert.reshape(-1, 3)
+
+        edgeslist = np.zeros(2 * len(obj.data.edges))
+        obj.data.edges.foreach_get('vertices', edgeslist)
+        e = (edgeslist + 1).reshape(-1, 2)
+
+        if (self.convtri):
+            faceslist = np.zeros(3 * len(obj.data.polygons))
+            obj.data.polygons.foreach_get('vertices', faceslist)
+            f = (faceslist + 1).reshape(-1, 3)
         else:
-            f = faces
+            faceslist = [(np.array(face.vertices[:]) + 1).tolist() for face in obj.data.polygons]
+            f = faceslist
 
         # Save file
         meshdata={'_DataInfo_': {'JMeshVersion': '0.5', 'Comment':'Created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)'},
-            'MeshVertex3':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt}}
+            'MeshVertex3':v, 'MeshPoly':f, 'param':{'keepratio':self.keepratio, 'maxvol':self.maxvol, 'mergetol':self.mergetol, 'dorepair':self.dorepair, 'tetgenopt':self.tetgenopt, 'div':self.voxeldiv}}
         jd.save(meshdata,os.path.join(outputdir,'blendermesh.jmsh'))
 
         if(int(self.endstep)==5):
@@ -176,20 +185,25 @@ class scene2mesh(bpy.types.Operator):
         oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete()
+        for obj in bpy.data.objects:
+            bpy.data.objects.remove(obj)
+        bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-        if(not self.onlysurf):
-            outputmesh=jd.load(os.path.join(outputdir,'volumemesh.jmsh'))
-            LoadTetMesh(outputmesh,'Iso2Mesh')
+        if self.voxeldiv:
+            outputmesh=oc.load(os.path.join(outputdir,'ImageMesh.mat'))
+            LoadVolMesh(outputmesh,'Iso2Mesh', outputdir, mode='model_view', colormap=self.colormap)
             bpy.context.view_layer.objects.active=bpy.data.objects['Iso2Mesh']
         else:
-            regiondata=jd.load(os.path.join(outputdir,'regionmesh.jmsh'))
-            if(len(regiondata.keys())>0):
-                LoadReginalMesh(regiondata,'region_')
-                bpy.context.view_layer.objects.active=bpy.data.objects['region_1']
-        
-        bpy.context.space_data.shading.type = 'WIREFRAME'
+            if (not self.onlysurf):
+                outputmesh = jd.load(os.path.join(outputdir, 'volumemesh.jmsh'))
+                LoadTetMesh(outputmesh, 'Iso2Mesh')
+                bpy.context.view_layer.objects.active = bpy.data.objects['Iso2Mesh']
+            else:
+                regiondata = jd.load(os.path.join(outputdir, 'regionmesh.jmsh'))
+                if (len(regiondata.keys()) > 0):
+                    LoadReginalMesh(regiondata, 'region_')
+                    bpy.context.view_layer.objects.active = bpy.data.objects['region_1']
+
 
         # at this point, if successful, iso2mesh generated mesh objects are imported into blender
         if(int(self.endstep)<7):
