@@ -176,6 +176,7 @@ class scene2mesh(bpy.types.Operator):
         oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
+        bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
 
