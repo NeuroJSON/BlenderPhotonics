@@ -34,6 +34,7 @@ class mesh2scene(bpy.types.Operator):
     
     def importmesh(self):
         # clear all object
+        bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
 
