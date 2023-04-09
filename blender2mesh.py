@@ -27,6 +27,7 @@ import numpy as np
 import jdata as jd
 import os
 from bpy.utils import register_class, unregister_class
+from .backend import get_backend
 from .utils import *
 
 G_MAXVOL = 1.0
@@ -75,7 +76,7 @@ class scene2mesh(bpy.types.Operator):
         return [desc for idx, _, desc in ENUM_ENDSTEP if idx == properties.endstep][0]
 
     def func(self):
-        outputdir = GetBPWorkFolder()
+        outputdir = get_bp_work_folder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 
@@ -166,30 +167,8 @@ class scene2mesh(bpy.types.Operator):
         if self.endstep < '6':
             return
 
-        try:
-            if bpy.context.scene.blender_photonics.backend == "octave":
-                import oct2py as op
-                from oct2py.utils import Oct2PyError as OcError1
-                OcError2 = OcError1
-                oc = op.Oct2Py()
-            else:
-                import matlab.engine as op
-                from matlab.engine import MatlabExecutionError as OcError1, RejectedExecutionError as OcError2
-                oc = op.start_matlab()
-        except ImportError:
-            raise ImportError(
-                'To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on '
-                'your choice of the backend')
-
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
-
-        try:
-            oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nargout=0)
-        except OcError1 as e:
-            if 'too many outputs' in e.args[0]:
-                oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nout=0)
-            else:
-                raise
+        backend = get_backend(bpy.context.scene.blender_photonics.backend)
+        backend.blender2mesh(os.path.join(outputdir, 'blendermesh.jmsh'))
 
         # import volume mesh to blender(just for user to check the result)
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -198,12 +177,12 @@ class scene2mesh(bpy.types.Operator):
 
         if not self.onlysurf:
             outputmesh = jd.load(os.path.join(outputdir, 'volumemesh.jmsh'))
-            LoadTetMesh(outputmesh, 'Iso2Mesh')
+            load_tet_mesh(outputmesh, 'Iso2Mesh')
             bpy.context.view_layer.objects.active = bpy.data.objects['Iso2Mesh']
         else:
             regiondata = jd.load(os.path.join(outputdir, 'regionmesh.jmsh'))
             if len(regiondata.keys()) > 0:
-                LoadReginalMesh(regiondata, 'region_')
+                load_regional_mesh(regiondata, 'region_')
                 bpy.context.view_layer.objects.active = bpy.data.objects['region_1']
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
@@ -212,7 +191,7 @@ class scene2mesh(bpy.types.Operator):
         if self.endstep < '7':
             return
 
-        ShowMessageBox(
+        show_message_box(
             "Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical "
             "properties for each region, please click 'Load mesh and setup simulation'",
             "BlenderPhotonics")
@@ -252,9 +231,9 @@ class BLENDER2MESH_OT_invoke_saveas(bpy.types.Operator):
         print(self.filepath)
         if not (self.filepath == ""):
             if os.name == 'nt':
-                os.popen("copy '" + os.path.join(GetBPWorkFolder(), 'blendermesh.jmsh') + "' '" + self.filepath + "'")
+                os.popen("copy '" + os.path.join(get_bp_work_folder(), 'blendermesh.jmsh') + "' '" + self.filepath + "'")
             else:
-                os.popen("cp '" + os.path.join(GetBPWorkFolder(), 'blendermesh.jmsh') + "' '" + self.filepath + "'")
+                os.popen("cp '" + os.path.join(get_bp_work_folder(), 'blendermesh.jmsh') + "' '" + self.filepath + "'")
         return {'FINISHED'}
 
     def invoke(self, context, event):

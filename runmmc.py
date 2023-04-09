@@ -87,7 +87,7 @@ class runmmc(bpy.types.Operator):
                'method': self.method, 'outputtype': self.outputtype, 'basisorder': self.basisorder,
                'debuglevel': self.debuglevel, 'gpuid': self.gpuid}
         print(obj['srctype'])
-        outputdir = GetBPWorkFolder()
+        outputdir = get_bp_work_folder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 
@@ -127,11 +127,11 @@ class runmmc(bpy.types.Operator):
         bpy.ops.object.delete()
 
         outputmesh = jd.load(os.path.join(outputdir, 'volumemesh.jmsh'))
-        outputmesh = JMeshFallback(outputmesh)
+        outputmesh = jmesh_fallback(outputmesh)
         if not isinstance(outputmesh['MeshTri3'], np.ndarray):
             outputmesh['MeshTri3'] = np.asarray(outputmesh['MeshTri3'], dtype=np.uint32)
         outputmesh['MeshTri3'] -= 1
-        AddMeshFromNodeFace(outputmesh['MeshVertex3'], outputmesh['MeshTri3'].tolist(), "Iso2Mesh")
+        add_mesh_from_node_face(outputmesh['MeshVertex3'], outputmesh['MeshTri3'].tolist(), "Iso2Mesh")
 
         # add color to blender model
         obj = bpy.data.objects['Iso2Mesh']

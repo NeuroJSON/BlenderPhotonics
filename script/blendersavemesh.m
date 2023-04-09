@@ -1,4 +1,4 @@
-function blendersavemesh(node,elem)
+function blendersavemesh(node,elem,regionmesh_fname,volumemesh_fname)
 %
 % blendersavemesh(node,elem)
 %
@@ -9,6 +9,8 @@ function blendersavemesh(node,elem)
 % input:
 %	 node: the node coordinate list of a tetrahedral mesh (nn x 3)
 %	 elem: the tetrahedral element list of the mesh (ne x 4)
+%    regionmesh_fname: file name to save the region mesh
+%    volumemesh_fname: file name to save the volume mesh
 %
 % output:
 %	 two JMesh files are saved under the temporary folder bpmwpath('')
@@ -59,9 +61,9 @@ if(maxtag==1)
     outputmesh=rmfield(outputmesh,encodevarname('MeshTri3(1)'));
 end
 disp(['begin to save whole volumic mesh.'])
-savejson('',outputmesh,'FileName',bpmwpath('regionmesh.jmsh'),'ArrayIndent',0);
+savejson('',outputmesh,'FileName','regionmesh.jmsh','ArrayIndent',0);
 faces = meshface(elem(:,1:4));
 
 meshdata.MeshTri3=faces;
-savejson('',meshdata,'FileName',bpmwpath('volumemesh.jmsh'),'ArrayIndent',0);
+savejson('',meshdata,'FileName','volumemesh.jmsh','ArrayIndent',0);
 disp(['saving complete.'])

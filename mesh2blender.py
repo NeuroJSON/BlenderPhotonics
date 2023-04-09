@@ -42,10 +42,10 @@ class mesh2scene(bpy.types.Operator):
         bpy.ops.object.delete()
 
         # folder path for importing .jmsh files
-        outputdir = GetBPWorkFolder()
+        outputdir = get_bp_work_folder()
 
         regiondata = jd.load(os.path.join(outputdir, 'regionmesh.jmsh'))
-        bbx = LoadReginalMesh(regiondata, 'region_')
+        bbx = load_regional_mesh(regiondata, 'region_')
 
         # add properties
         for obj in bpy.data.objects:

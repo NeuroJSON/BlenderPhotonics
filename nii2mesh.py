@@ -59,7 +59,7 @@ class nii2mesh(bpy.types.Operator):
 
     def vol2mesh(self):
         # Remove last .jmsh file
-        outputdir = GetBPWorkFolder()
+        outputdir = get_bp_work_folder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
         if os.path.exists(os.path.join(outputdir, 'regionmesh.jmsh')):
@@ -106,7 +106,7 @@ class nii2mesh(bpy.types.Operator):
         bpy.ops.object.delete()
 
         regiondata = jd.load(os.path.join(outputdir, 'regionmesh.jmsh'))
-        regiondata = JMeshFallback(regiondata)
+        regiondata = jmesh_fallback(regiondata)
         n = len(regiondata.keys()) - 1
 
         # To import mesh.ply in batches
@@ -115,11 +115,11 @@ class nii2mesh(bpy.types.Operator):
             if not isinstance(regiondata[surfkey], np.ndarray):
                 regiondata[surfkey] = np.asarray(regiondata[surfkey], dtype=np.uint32)
             regiondata[surfkey] -= 1
-            AddMeshFromNodeFace(regiondata['MeshVertex3'], regiondata[surfkey].tolist(), 'region_' + str(i + 1))
+            add_mesh_from_node_face(regiondata['MeshVertex3'], regiondata[surfkey].tolist(), 'region_' + str(i + 1))
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
-        ShowMessageBox(
+        show_message_box(
             "Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical "
             "properties for each region, please click 'Load mesh and setup simulation'",
             "BlenderPhotonics")

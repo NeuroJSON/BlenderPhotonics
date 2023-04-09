@@ -23,35 +23,36 @@ To cite this work, please use the below information
 
 import bpy
 import os
-import tempfile
 import numpy as np
 
+from bpy.types import Object as BlenderObject
+from getpass import getuser
+from tempfile import gettempdir
 
-def ShowMessageBox(message="", title="Message Box", icon='INFO'):
+from typing import Any, Iterable
+
+
+def show_message_box(message: str = "", title: str = "Message Box", icon: str = "INFO"):
     def draw(self, context):
         self.layout.label(text=message)
 
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 
-def GetNodeFacefromObject(obj, istrimesh=True):
-    verts = []
-    for n in range(len(obj.data.vertices)):
-        vert = obj.data.vertices[n].co
-        v_global = obj.matrix_world @ vert
-        verts.append(v_global)
+def get_node_face_from_object(obj: BlenderObject, istrimesh: bool = True):
+    vertices = [obj.matrix_world @ vertex.co for vertex in obj.data.vertices]
     # edges = [edge.vertices[:] for edge in obj.data.edges]
     faces = [(np.array(face.vertices[:]) + 1).tolist() for face in obj.data.polygons]
-    v = np.array(verts)
+    v = np.array(vertices)
     try:
         f = np.array(faces)
-        return {'MeshVertex3': v, 'MeshTri3': f}
-    except:
+        return {"MeshVertex3": v, "MeshTri3": f}
+    except ValueError:
         f = faces
-    return {'_DataInfo_': {'BlenderObjectName', obj.name}, 'MeshVertex3': v, 'MeshPoly': f}
+    return {"_DataInfo_": {"BlenderObjectName", obj.name}, "MeshVertex3": v, "MeshPoly": f}
 
 
-def AddMeshFromNodeFace(node, face, name):
+def add_mesh_from_node_face(node: Iterable, face: Iterable, name: str):
     # Create mesh and related object
     my_mesh = bpy.data.meshes.new(name)
     my_obj = bpy.data.objects.new(name, my_mesh)
@@ -60,63 +61,68 @@ def AddMeshFromNodeFace(node, face, name):
     my_obj.location = bpy.context.scene.cursor.location
 
     # make collection
-    rootcoll = bpy.context.scene.collection.children.get("Collection")
+    root_coll = bpy.context.scene.collection.children.get("Collection")
 
     # Link object to the scene collection
-    rootcoll.objects.link(my_obj)
+    root_coll.objects.link(my_obj)
 
     # Create object using blender function
     my_mesh.from_pydata(node, [], face)
     my_mesh.update(calc_edges=True)
 
 
-def GetBPWorkFolder():
-    if os.name == 'nt':
-        return os.path.join(tempfile.gettempdir(), 'iso2mesh-' + os.environ.get('UserName'), 'blenderphotonics')
-    else:
-        return os.path.join(tempfile.gettempdir(), 'iso2mesh-' + os.environ.get('USER'), 'blenderphotonics')
+def get_bp_work_folder():
+    return os.path.join(gettempdir(), 'iso2mesh-', getuser(), 'blenderphotonics')
 
 
-def LoadReginalMesh(meshdata, name):
-    n = len(meshdata.keys()) - 1
-
+def load_regional_mesh(mesh_data, name: str):
     # To import mesh.ply in batches
     bbx = {'min': np.array([np.inf, np.inf, np.inf]), 'max': np.array([-np.inf, -np.inf, -np.inf])}
-    for i in range(0, n):
-        surfkey = 'MeshTri3(' + str(i + 1) + ')'
-        if n == 1:
-            surfkey = 'MeshTri3'
-        if not isinstance(meshdata[surfkey], np.ndarray):
-            meshdata[surfkey] = np.asarray(meshdata[surfkey], dtype=np.uint32)
-        meshdata[surfkey] -= 1
-        bbx['min'] = np.amin(np.vstack((bbx['min'], np.amin(meshdata['MeshVertex3'], axis=0))), axis=0)
-        bbx['max'] = np.amax(np.vstack((bbx['max'], np.amax(meshdata['MeshVertex3'], axis=0))), axis=0)
-        AddMeshFromNodeFace(meshdata['MeshVertex3'], meshdata[surfkey].tolist(), name + str(i + 1))
+    if len(mesh_data.keys()) == 2:
+        surf_keys = ['MeshTri3']
+    else:
+        surf_keys = [f'MeshTri3({i + 1})' for i, _ in enumerate(mesh_data.keys())]
+
+    for i, surf_key in enumerate(surf_keys):
+        if not isinstance(mesh_data[surf_key], np.ndarray):
+            mesh_data[surf_key] = np.asarray(mesh_data[surf_key], dtype=np.uint32)
+        mesh_data[surf_key] -= 1
+        bbx['min'] = np.amin(np.vstack((bbx['min'], np.amin(mesh_data['MeshVertex3'], axis=0))), axis=0)
+        bbx['max'] = np.amax(np.vstack((bbx['max'], np.amax(mesh_data['MeshVertex3'], axis=0))), axis=0)
+        add_mesh_from_node_face(mesh_data['MeshVertex3'], mesh_data[surf_key].tolist(), f'{name}{i + 1}')
     print(bbx)
     return bbx
 
 
-def LoadTetMesh(meshdata, name):
-    if not isinstance(meshdata['MeshTri3'], np.ndarray):
-        meshdata['MeshTri3'] = np.asarray(meshdata['MeshTri3'], dtype=np.uint32)
-    meshdata['MeshTri3'] -= 1
-    AddMeshFromNodeFace(meshdata['MeshVertex3'], meshdata['MeshTri3'].tolist(), name)
+def load_tet_mesh(mesh_data, name):
+    if not isinstance(mesh_data['MeshTri3'], np.ndarray):
+        mesh_data['MeshTri3'] = np.asarray(mesh_data['MeshTri3'], dtype=np.uint32)
+    mesh_data['MeshTri3'] -= 1
+    add_mesh_from_node_face(mesh_data['MeshVertex3'], mesh_data['MeshTri3'].tolist(), name)
 
 
-def JMeshFallback(meshobj):
-    if ('MeshSurf' in meshobj) and (not ('MeshTri3' in meshobj)):
-        meshobj['MeshTri3'] = meshobj.pop('MeshSurf')
-    if ('MeshNode' in meshobj) and (not ('MeshVertex3' in meshobj)):
-        meshobj['MeshVertex3'] = meshobj.pop('MeshNode')
-    return meshobj
+def jmesh_fallback(mesh_obj):
+    if ('MeshSurf' in mesh_obj) and (not ('MeshTri3' in mesh_obj)):
+        mesh_obj['MeshTri3'] = mesh_obj.pop('MeshSurf')
+    if ('MeshNode' in mesh_obj) and (not ('MeshVertex3' in mesh_obj)):
+        mesh_obj['MeshVertex3'] = mesh_obj.pop('MeshNode')
+    return mesh_obj
 
 
-def normalize(x, minimum=None, maximum=None, inplace=False):
+def normalize(x: Iterable, minimum: Any = None, maximum: Any = None, inplace: bool = False):
     if minimum is None:
         minimum = np.min(x)
     if maximum is None:
         maximum = np.max(x)
     if not inplace:
-        return (x - minimum) / (maximum - minimum)
-    x = (x - minimum) / (maximum - minimum)
+        try:
+            return (x - minimum) / (maximum - minimum)
+        except TypeError:
+            tmp_x = np.array(x)
+            return (tmp_x - minimum) / (maximum - minimum)
+    try:
+        x = (x - minimum) / (maximum - minimum)
+    except TypeError:
+        x = (np.array(x) - minimum) / (maximum - minimum)
+
     return x

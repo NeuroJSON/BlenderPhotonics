@@ -73,7 +73,7 @@ class object2surf(bpy.types.Operator):
         return [desc for idx, _, desc in ENUM_ACTION if idx == properties.action][0]
 
     def func(self):
-        outputdir = GetBPWorkFolder()
+        outputdir = get_bp_work_folder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
 
@@ -81,7 +81,7 @@ class object2surf(bpy.types.Operator):
             os.remove(os.path.join(outputdir, 'surfacemesh.jmsh'))
 
         if len(bpy.context.selected_objects) < 1:
-            ShowMessageBox("Must select at least one object (for Boolean operations, select two)", "BlenderPhotonics")
+            show_message_box("Must select at least one object (for Boolean operations, select two)", "BlenderPhotonics")
             return
 
         # remove camera and light objects
@@ -97,7 +97,7 @@ class object2surf(bpy.types.Operator):
             bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
         if len(bpy.context.selected_objects) < 1:
-            ShowMessageBox("No mesh-like object was selected, skip", "BlenderPhotonics")
+            show_message_box("No mesh-like object was selected, skip", "BlenderPhotonics")
             return
 
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -107,7 +107,7 @@ class object2surf(bpy.types.Operator):
                                               'http://mcx.space/BlenderPhotonics)'},
                     'MeshGroup': []}
         for ob in bpy.context.selected_objects:
-            objsurf = GetNodeFacefromObject(ob, self.convtri)
+            objsurf = get_node_face_from_object(ob, self.convtri)
             surfdata['MeshGroup'].append(objsurf)
 
         surfdata['param'] = {'action': self.action, 'level': self.actionparam}
@@ -156,20 +156,20 @@ class object2surf(bpy.types.Operator):
             if 'MeshVertex3' in ob:
                 if ('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_']):
                     objname = ob['_DataInfo_']['BlenderObjectName']
-                AddMeshFromNodeFace(ob['MeshVertex3'], (np.array(ob['MeshTri3']) - 1).tolist(), objname)
+                add_mesh_from_node_face(ob['MeshVertex3'], (np.array(ob['MeshTri3']) - 1).tolist(), objname)
                 bpy.context.view_layer.objects.active = bpy.data.objects[objname]
             else:
                 for ob in surfdata['MeshGroup']:
                     objname = 'surf_' + str(idx)
                     if ('_DataInfo_' in ob) and ('BlenderObjectName' in ob['_DataInfo_']):
                         objname = ob['_DataInfo_']['BlenderObjectName']
-                    AddMeshFromNodeFace(ob['MeshVertex3'], (np.array(ob['MeshTri3']) - 1).tolist(), objname)
+                    add_mesh_from_node_face(ob['MeshVertex3'], (np.array(ob['MeshTri3']) - 1).tolist(), objname)
                     bpy.context.view_layer.objects.active = bpy.data.objects[objname]
                     idx += 1
 
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
-        ShowMessageBox("Mesh generation is complete. The combined surface mesh is imported for inspection.",
+        show_message_box("Mesh generation is complete. The combined surface mesh is imported for inspection.",
                        "BlenderPhotonics")
 
     def execute(self, context):
@@ -211,9 +211,9 @@ class OBJECT2SURF_OT_invoke_export(bpy.types.Operator):
         print(self.filepath)
         if not (self.filepath == ""):
             if os.name == 'nt':
-                os.popen("copy '" + os.path.join(GetBPWorkFolder(), 'blendersurf.jmsh') + "' '" + self.filepath + "'")
+                os.popen("copy '" + os.path.join(get_bp_work_folder(), 'blendersurf.jmsh') + "' '" + self.filepath + "'")
             else:
-                os.popen("cp '" + os.path.join(GetBPWorkFolder(), 'blendersurf.jmsh') + "' '" + self.filepath + "'")
+                os.popen("cp '" + os.path.join(get_bp_work_folder(), 'blendersurf.jmsh') + "' '" + self.filepath + "'")
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -256,7 +256,7 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator, ImportHelper):
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
         surfdata = oc.feval('surf2jmesh', self.filepath)
-        AddMeshFromNodeFace(surfdata['MeshVertex3'], (np.array(surfdata['MeshTri3']) - 1).tolist(), 'importedsurf')
+        add_mesh_from_node_face(surfdata['MeshVertex3'], (np.array(surfdata['MeshTri3']) - 1).tolist(), 'importedsurf')
 
         return {'FINISHED'}
 
