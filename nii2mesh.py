@@ -28,12 +28,12 @@ import jdata as jd
 import os
 from .utils import *
 
-g_maxvol = 100
-g_radbound = 10
-g_distbound = 1.0
-g_isovalue = 0.5
-g_imagetype = "multi-label"
-g_method = "auto"
+G_MAXVOL = 100
+G_RADBOUND = 10
+G_DISTBOUND = 1.0
+G_ISOVALUE = 0.5
+G_IMAGETYPE = "multi-label"
+G_METHOD = "auto"
 
 
 class nii2mesh(bpy.types.Operator):
@@ -46,10 +46,10 @@ class nii2mesh(bpy.types.Operator):
 
     bl_options = {"REGISTER", "UNDO"}
 
-    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tetrahedron volume")
-    radbound: bpy.props.FloatProperty(default=g_radbound, name="Surface triangle maximum diameter")
-    distbound: bpy.props.FloatProperty(default=g_distbound, name="Maximum deviation from true boundary")
-    isovalue: bpy.props.FloatProperty(default=g_isovalue, name="Isovalue to create surface")
+    maxvol: bpy.props.FloatProperty(default=G_MAXVOL, name="Maximum tetrahedron volume")
+    radbound: bpy.props.FloatProperty(default=G_RADBOUND, name="Surface triangle maximum diameter")
+    distbound: bpy.props.FloatProperty(default=G_DISTBOUND, name="Maximum deviation from true boundary")
+    isovalue: bpy.props.FloatProperty(default=G_ISOVALUE, name="Isovalue to create surface")
     imagetype: bpy.props.EnumProperty(name="Volume type", items=[('multi-label', 'multi-label', 'multi-label'),
                                                                  ('binary', 'binary', 'binary'),
                                                                  ('grayscale', 'grayscale', 'grayscale')])
@@ -101,10 +101,8 @@ class nii2mesh(bpy.types.Operator):
         n = len(regiondata.keys()) - 1
 
         # To import mesh.ply in batches
-        for i in range(0, n):
-            surfkey = 'MeshTri3(' + str(i + 1) + ')'
-            if n == 1:
-                surfkey = 'MeshTri3'
+        for i in range(n):
+            surfkey = 'MeshTri3' if n == 1 else f'MeshTri3({i + 1})'
             if not isinstance(regiondata[surfkey], np.ndarray):
                 regiondata[surfkey] = np.asarray(regiondata[surfkey], dtype=np.uint32)
             regiondata[surfkey] -= 1
@@ -134,5 +132,5 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_maxvol, g_radbound, g_distbound, g_imagetype, g_method
+        global G_MAXVOL, G_RADBOUND, G_DISTBOUND, G_IMAGETYPE, G_METHOD
         self.layout.operator("object.dialog_operator")

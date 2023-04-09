@@ -29,10 +29,10 @@ import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
 
-g_action = 'repair'
-g_actionparam = 1.0
-g_convtri = True
-enum_action = [
+G_ACTION = 'repair'
+G_ACTIONPARAM = 1.0
+G_CONVTRI = True
+ENUM_ACTION = [
     ('import', 'Import surface mesh from file', 'Import surface mesh from JMesh/STL/OFF/SMF/ASC/MEDIT/GTS to Blender'),
     ('export', 'Export selected to JSON/JMesh', 'Export selected objects to JSON/JMesh exchange file'),
     ('boolean-resolve', 'Boolean-resolve: Two meshes slice each other',
@@ -64,16 +64,13 @@ class object2surf(bpy.types.Operator):
 
     bl_options = {"REGISTER", "UNDO"}
 
-    action: bpy.props.EnumProperty(default=g_action, name="Operation", items=enum_action)
-    actionparam: bpy.props.FloatProperty(default=g_actionparam, name="Operation parameter")
-    convtri: bpy.props.BoolProperty(default=g_convtri, name="Convert to triangular mesh first")
+    action: bpy.props.EnumProperty(default=G_ACTION, name="Operation", items=ENUM_ACTION)
+    actionparam: bpy.props.FloatProperty(default=G_ACTIONPARAM, name="Operation parameter")
+    convtri: bpy.props.BoolProperty(default=G_CONVTRI, name="Convert to triangular mesh first")
 
     @classmethod
     def description(cls, context, properties):
-        hints = {}
-        for item in enum_action:
-            hints[item[0]] = item[2]
-        return hints[properties.action]
+        return [desc for idx, _, desc in ENUM_ACTION if idx == properties.action][0]
 
     def func(self):
         outputdir = GetBPWorkFolder()
@@ -187,7 +184,7 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_action, g_actionparam, g_convtri
+        global G_ACTION, G_ACTIONPARAM, G_CONVTRI
         self.layout.operator("object.dialog_operator")
 
 

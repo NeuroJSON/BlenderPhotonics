@@ -29,15 +29,15 @@ import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
 
-g_maxvol = 1.0
-g_keepratio = 1.0
-g_mergetol = 0
-g_dorepair = False
-g_onlysurf = False
-g_convtri = True
-g_endstep = '9'
-g_tetgenopt = ""
-enum_endstep = [('1', 'Step 1: Convert objects to mesh', 'Convert objects to mesh'),
+G_MAXVOL = 1.0
+G_KEEPRATIO = 1.0
+G_MERGETOL = 0
+G_DOREPAIR = False
+G_ONLYSURF = False
+G_CONVTRI = True
+G_ENDSTEP = '9'
+G_TETGENOPT = ""
+ENUM_ENDSTEP = [('1', 'Step 1: Convert objects to mesh', 'Convert objects to mesh'),
                 ('2', 'Step 2: Join all objects', 'Join all objects'),
                 ('3', 'Step 3: Intersect objects', 'Intersect objects'),
                 ('4', 'Step 4: Convert to triangles',
@@ -60,22 +60,19 @@ class scene2mesh(bpy.types.Operator):
 
     bl_options = {"REGISTER", "UNDO"}
 
-    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tet volume")
-    keepratio: bpy.props.FloatProperty(default=g_keepratio, name="Fraction edge kept (0-1)")
-    mergetol: bpy.props.FloatProperty(default=g_mergetol, name="Tolerance to merge nodes (0 to disable)")
-    dorepair: bpy.props.BoolProperty(default=g_dorepair, name="Repair mesh (single object only)")
-    onlysurf: bpy.props.BoolProperty(default=g_onlysurf,
+    maxvol: bpy.props.FloatProperty(default=G_MAXVOL, name="Maximum tet volume")
+    keepratio: bpy.props.FloatProperty(default=G_KEEPRATIO, name="Fraction edge kept (0-1)")
+    mergetol: bpy.props.FloatProperty(default=G_MERGETOL, name="Tolerance to merge nodes (0 to disable)")
+    dorepair: bpy.props.BoolProperty(default=G_DOREPAIR, name="Repair mesh (single object only)")
+    onlysurf: bpy.props.BoolProperty(default=G_ONLYSURF,
                                      name="Return triangular surface mesh only (no tetrahedral mesh)")
-    convtri: bpy.props.BoolProperty(default=g_convtri, name="Convert to triangular mesh first)")
-    endstep: bpy.props.EnumProperty(default=g_endstep, name="Run through step", items=enum_endstep)
-    tetgenopt: bpy.props.StringProperty(default=g_tetgenopt, name="Additional tetgen flags")
+    convtri: bpy.props.BoolProperty(default=G_CONVTRI, name="Convert to triangular mesh first)")
+    endstep: bpy.props.EnumProperty(default=G_ENDSTEP, name="Run through step", items=ENUM_ENDSTEP)
+    tetgenopt: bpy.props.StringProperty(default=G_TETGENOPT, name="Additional tetgen flags")
 
     @classmethod
     def description(cls, context, properties):
-        hints = {}
-        for item in enum_endstep:
-            hints[item[0]] = item[2]
-        return hints[properties.endstep]
+        return [desc for idx, _, desc in ENUM_ENDSTEP if idx == properties.endstep][0]
 
     def func(self):
         outputdir = GetBPWorkFolder()
@@ -107,7 +104,7 @@ class scene2mesh(bpy.types.Operator):
             bpy.ops.object.convert(target='MESH')
 
         # at this point, objects are converted to mesh if possible
-        if int(self.endstep) < 2:
+        if self.endstep < '2':
             return
 
         bpy.ops.object.select_all(action='SELECT')
@@ -115,7 +112,7 @@ class scene2mesh(bpy.types.Operator):
             bpy.ops.object.join()
 
         # at this point, objects are jointed
-        if int(self.endstep) < 3:
+        if self.endstep < '3':
             return
 
         bpy.ops.object.select_all(action='DESELECT')
@@ -129,7 +126,7 @@ class scene2mesh(bpy.types.Operator):
             print("use fast intersection solver")
 
         # at this point, overlapping objects are intersected
-        if int(self.endstep) < 4:
+        if self.endstep < '4':
             return
 
         if self.convtri:
@@ -137,7 +134,7 @@ class scene2mesh(bpy.types.Operator):
             bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
         # at this point, if enabled, surfaces are converted to triangular meshes
-        if int(self.endstep) < 5:
+        if self.endstep < '5':
             return
 
         # output mesh data to Octave
@@ -145,11 +142,7 @@ class scene2mesh(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         obj = bpy.context.view_layer.objects.active
-        verts = []
-        for n in range(len(obj.data.vertices)):
-            vert = obj.data.vertices[n].co
-            v_global = obj.matrix_world @ vert
-            verts.append(v_global)
+        verts = [obj.matrix_world @ vert.co for vert in obj.data.vertices]
         edges = [edge.vertices[:] for edge in obj.data.edges]
         faces = [(np.array(face.vertices[:]) + 1).tolist() for face in obj.data.polygons]
         v = np.array(verts)
@@ -166,11 +159,11 @@ class scene2mesh(bpy.types.Operator):
                               'dorepair': self.dorepair, 'tetgenopt': self.tetgenopt}}
         jd.save(meshdata, os.path.join(outputdir, 'blendermesh.jmsh'))
 
-        if int(self.endstep) == 5:
+        if self.endstep == '5':
             bpy.ops.blender2mesh.invoke_saveas('INVOKE_DEFAULT')
 
         # at this point, all mesh objects are saved to a jmesh file under work-dir as blendermesh.json
-        if int(self.endstep) < 6:
+        if self.endstep < '6':
             return
 
         try:
@@ -189,7 +182,7 @@ class scene2mesh(bpy.types.Operator):
 
         oc.feval('blender2mesh', os.path.join(outputdir, 'blendermesh.jmsh'), nout=0)
 
-        # import volum mesh to blender(just for user to check the result)
+        # import volume mesh to blender(just for user to check the result)
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
@@ -207,7 +200,7 @@ class scene2mesh(bpy.types.Operator):
         bpy.context.space_data.shading.type = 'WIREFRAME'
 
         # at this point, if successful, iso2mesh generated mesh objects are imported into blender
-        if int(self.endstep) < 7:
+        if self.endstep < '7':
             return
 
         ShowMessageBox(
@@ -233,7 +226,7 @@ class setmeshingprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_maxvol, g_keepratio, g_mergetol, g_dorepair, g_onlysurf, g_convtri, g_tetgenopt, g_endstep
+        global G_MAXVOL, G_KEEPRATIO, G_MERGETOL, G_DOREPAIR, G_ONLYSURF, G_CONVTRI, G_TETGENOPT, G_ENDSTEP
         self.layout.operator("object.dialog_operator")
 
 

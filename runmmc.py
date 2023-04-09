@@ -28,16 +28,16 @@ import jdata as jd
 import os
 from .utils import *
 
-g_nphoton = 10000
-g_tend = 5e-9
-g_tstep = 5e-9
-g_method = "elem"
-g_outputtype = "flux"
-g_isreflect = True
-g_isnormalized = True
-g_basisorder = 1
-g_debuglevel = "TP"
-g_gpuid = "1"
+G_NPHOTON = 10000
+G_TEND = 5e-9
+G_TSTEP = 5e-9
+G_METHOD = "elem"
+G_OUTPUTTYPE = "flux"
+G_ISREFLECT = True
+G_ISNORMALIZED = True
+G_BASISORDER = 1
+G_DEBUGLEVEL = "TP"
+G_GPUID = "1"
 
 
 class runmmc(bpy.types.Operator):
@@ -45,25 +45,25 @@ class runmmc(bpy.types.Operator):
     bl_description = "Run mesh-based Monte Carlo simulation"
     bl_idname = 'blenderphotonics.runmmc'
 
-    # creat a interface to set uesrs' model parameter.
+    # create an interface to set user's model parameter.
 
     bl_options = {"REGISTER", "UNDO"}
 
-    nphoton: bpy.props.FloatProperty(default=g_nphoton, name="Photon number")
-    tend: bpy.props.FloatProperty(default=g_tend, name="Time gate width (s)")
-    tstep: bpy.props.FloatProperty(default=g_tstep, name="Time gate step (s)")
-    isreflect: bpy.props.BoolProperty(default=g_isreflect, name="Do reflection")
-    isnormalized: bpy.props.BoolProperty(default=g_isnormalized, name="Normalize output")
-    basisorder: bpy.props.IntProperty(default=g_basisorder, step=1, name="Basis order (0 or 1)")
-    method: bpy.props.EnumProperty(default=g_method, name="Raytracer (use elem)",
+    nphoton: bpy.props.FloatProperty(default=G_NPHOTON, name="Photon number")
+    tend: bpy.props.FloatProperty(default=G_TEND, name="Time gate width (s)")
+    tstep: bpy.props.FloatProperty(default=G_TSTEP, name="Time gate step (s)")
+    isreflect: bpy.props.BoolProperty(default=G_ISREFLECT, name="Do reflection")
+    isnormalized: bpy.props.BoolProperty(default=G_ISNORMALIZED, name="Normalize output")
+    basisorder: bpy.props.IntProperty(default=G_BASISORDER, step=1, name="Basis order (0 or 1)")
+    method: bpy.props.EnumProperty(default=G_METHOD, name="Raytracer (use elem)",
                                    items=[('elem', 'elem: Saving weight on elements', 'Saving weight on elements'),
                                           ('grid', 'grid: Dual-grid MMC (not supported)', 'Dual-grid MMC')])
-    outputtype: bpy.props.EnumProperty(default=g_outputtype, name="Output quantity",
+    outputtype: bpy.props.EnumProperty(default=G_OUTPUTTYPE, name="Output quantity",
                                        items=[('flux', 'flux= fluence rate', 'fluence rate (J/mm^2/s)'),
                                               ('fluence', 'fluence: fluence (J/mm^2)', 'fluence in J/mm^2'),
                                               ('energy', 'energy: energy density J/mm^3', 'energy density J/mm^3')])
-    gpuid: bpy.props.StringProperty(default=g_gpuid, name="GPU ID (01 mask,-1=CPU)")
-    debuglevel: bpy.props.StringProperty(default=g_debuglevel, name="Debug flag [MCBWDIOXATRPE]")
+    gpuid: bpy.props.StringProperty(default=G_GPUID, name="GPU ID (01 mask,-1=CPU)")
+    debuglevel: bpy.props.StringProperty(default=G_DEBUGLEVEL, name="Debug flag [MCBWDIOXATRPE]")
 
     def preparemmc(self):
         # save optical parameters and source source information
@@ -104,7 +104,7 @@ class runmmc(bpy.types.Operator):
                 oc = op.start_matlab()
         except ImportError:
             raise ImportError(
-                'To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on '
+                'To run this feature, you must install the oct2py or matlab.engine Python modules first, based on '
                 'your choice of the backend')
 
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script'))
@@ -128,13 +128,9 @@ class runmmc(bpy.types.Operator):
         mmcoutput = jd.load(os.path.join(outputdir, 'mmcoutput.json'))
         mmcoutput['logflux'] = np.asarray(mmcoutput['logflux'], dtype='float32')
 
-        def normalize(x, maximum, minimum):
-            x = (x - minimum) / (maximum - minimum)
-            return x
-
         colorbit = 10
         colorkind = 2 ** colorbit - 1
-        weight_data = normalize(mmcoutput['logflux'], np.max(mmcoutput['logflux']), np.min(mmcoutput['logflux']))
+        weight_data = normalize(mmcoutput['logflux'])
         weight_data_test = np.rint(weight_data * colorkind)
 
         new_vertex_group = obj.vertex_groups.new(name='weight')
@@ -170,5 +166,5 @@ class setmmcprop(bpy.types.Panel):
     bl_region_type = "UI"
 
     def draw(self, context):
-        global g_nphoton, g_tend, g_tstep, g_method, g_outputtype, g_isreflect, g_isnormalized, g_basisorder, g_debuglevel, g_gpuid
+        global G_NPHOTON, G_TEND, G_TSTEP, G_METHOD, G_OUTPUTTYPE, G_ISREFLECT, G_ISNORMALIZED, G_BASISORDER, G_DEBUGLEVEL, G_GPUID
         self.layout.operator("object.dialog_operator")

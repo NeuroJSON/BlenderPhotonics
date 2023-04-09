@@ -109,3 +109,14 @@ def JMeshFallback(meshobj):
     if ('MeshNode' in meshobj) and (not ('MeshVertex3' in meshobj)):
         meshobj['MeshVertex3'] = meshobj.pop('MeshNode')
     return meshobj
+
+
+def normalize(x, minimum=None, maximum=None, inplace=False):
+    if minimum is None:
+        minimum = np.min(x)
+    if maximum is None:
+        maximum = np.max(x)
+    if not inplace:
+        return (x - minimum) / (maximum - minimum)
+    x = (x - minimum) / (maximum - minimum)
+    return x
