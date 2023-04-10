@@ -50,4 +50,4 @@ end
 save('-v7',bpmwpath('meshdata.mat'),'node','elem');
 disp(['begin to save region mesh'])
 
-blendersavemesh(node,elem);
+blendersavemesh(node,elem,regionmesh_fname, volumemesh_fname);
