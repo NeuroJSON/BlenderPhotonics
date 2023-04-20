@@ -23,8 +23,6 @@ To cite this work, please use the below information
 
 import bpy
 import numpy as np
-import jdata as jd
-import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
 
@@ -69,6 +67,9 @@ class scene2mesh(bpy.types.Operator):
         return hints[properties.endstep]
 
     def func(self):
+        import jdata as jd
+        import os
+
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)

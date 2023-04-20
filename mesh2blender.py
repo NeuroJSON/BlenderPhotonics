@@ -23,8 +23,6 @@ To cite this work, please use the below information
 
 import bpy
 import numpy as np
-import jdata as jd
-import os
 from .utils import *
 
 class mesh2scene(bpy.types.Operator):
@@ -33,6 +31,8 @@ class mesh2scene(bpy.types.Operator):
     bl_idname = 'blenderphotonics.meshtoscene'
     
     def importmesh(self):
+        import jdata as jd
+        import os
         # clear all object
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()

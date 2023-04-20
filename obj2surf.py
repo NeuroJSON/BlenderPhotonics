@@ -23,8 +23,6 @@ To cite this work, please use the below information
 import bpy
 from bpy_extras.io_utils import ImportHelper
 import numpy as np
-import jdata as jd
-import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
 
@@ -66,6 +64,9 @@ class object2surf(bpy.types.Operator):
         return hints[properties.action]
 
     def func(self):
+        import jdata as jd
+        import os
+
         outputdir = GetBPWorkFolder();
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)

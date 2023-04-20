@@ -23,8 +23,6 @@ To cite this work, please use the below information
 
 import bpy
 import numpy as np
-import jdata as jd
-import os
 from .utils import *
 
 g_nphoton=10000
@@ -59,6 +57,9 @@ class runmmc(bpy.types.Operator):
     debuglevel: bpy.props.StringProperty(default=g_debuglevel,name="Debug flag [MCBWDIOXATRPE]")
 
     def preparemmc(self):
+        import jdata as jd
+        import os
+
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         cfg = [] # location, direction, photon number, Type,
