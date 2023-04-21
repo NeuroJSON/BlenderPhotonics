@@ -27,6 +27,7 @@ from .mesh2blender import mesh2scene
 from .runmmc import runmmc
 from .nii2mesh import nii2mesh
 from .obj2surf import object2surf
+from .pkg import InstallJData, InstallOct2py
 
 class BlenderPhotonics_UI(bpy.types.Panel):
     bl_label = 'BlenderPhotonics_mcx v2022'
@@ -43,6 +44,9 @@ class BlenderPhotonics_UI(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         bp = scene.blender_photonics
+        rowengine = layout.row()
+        rowengine.operator(InstallOct2py.bl_idname, text="Install Oct2py", icon='FILE_TICK')
+        rowengine.operator(InstallJData.bl_idname, text="Install JData", icon='FILE_TICK')
         rowengine = layout.row()
         rowengine.label(text="Backend:")
         rowengine.prop(bp, "backend", expand=True)
