@@ -58,7 +58,7 @@ bl_info = {
     "name": "BlenderPhotonics_mcx",
     "author": "(c) 2021 Yuxuan (Victor) Zhang, (c) 2021 Qianqian Fang",
     "version": (1, 0),  # min plug-in version
-    "blender": (2, 82, 0),  # min blender version
+    "blender": (3, 5, 0),  # min blender version
     "location": "Layout，UI",
     "description": "An integrated 3D mesh generation and Monte Carlo photon transport simulation environment",
     "warning": "This plug-in requires the preinstallation of Iso2Mesh (http://iso2mesh.sf.net) and MMCLAB (http://mcx.space)",
