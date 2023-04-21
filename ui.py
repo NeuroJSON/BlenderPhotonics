@@ -25,7 +25,6 @@ import bpy
 from .blender2mesh import scene2mesh
 from .mesh2blender import mesh2scene
 from .runmmc import runmmc
-from .niifile import niifile
 from .nii2mesh import nii2mesh
 from .obj2surf import object2surf
 

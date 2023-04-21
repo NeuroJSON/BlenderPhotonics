@@ -75,9 +75,12 @@ from .runmmc import runmmc
 from .niifile import niifile
 from .nii2mesh import nii2mesh
 from bpy.props import PointerProperty
+from .pkg import InstallJData, InstallOct2py
 
 def register():
     print("Registering BlenderPhotonics_mcx")
+    bpy.utils.register_class(InstallOct2py)
+    bpy.utils.register_class(InstallJData)
     bpy.utils.register_class(scene2mesh)
     bpy.utils.register_class(object2surf)
     bpy.utils.register_class(niifile)
@@ -90,6 +93,8 @@ def register():
 
 def unregister():
     print("Unregistering BlenderPhotonics_mcx")
+    bpy.utils.unregister_class(InstallOct2py)
+    bpy.utils.unregister_class(InstallJData)
     bpy.utils.unregister_class(scene2mesh)
     bpy.utils.unregister_class(object2surf)
     bpy.utils.unregister_class(niifile)
