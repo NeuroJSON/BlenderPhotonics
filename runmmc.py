@@ -23,7 +23,6 @@ To cite this work, please use the below information
 
 import bpy
 import numpy as np
-import jdata as jd
 import os
 from .utils import *
 
@@ -65,6 +64,8 @@ class runmmc(bpy.types.Operator):
     colormap: bpy.props.StringProperty(default=g_colormap, name="color scheme")
 
     def preparemmc(self):
+        import jdata as jd
+
         ## save optical parameters and source source information
         parameters = [] # mu_a, mu_s, n, g
         cfg = [] # location, direction, photon number, Type,

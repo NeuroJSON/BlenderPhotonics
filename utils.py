@@ -27,7 +27,6 @@ import tempfile
 import numpy as np
 import pyopenvdb as vdb
 import copy
-import jdata as jd
 
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
@@ -188,6 +187,7 @@ def LoadVolMesh(mesh_np, id, path, mode, colormap='jet'):
 
 
 def AddMaterial(id, alpha, r_number=1, colormap_id='jet'):
+    import jdata as jd
     bpy.data.materials.new(name=id)
     color_assert_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets','colormap_assest.json')
     colorlist = jd.load(color_assert_path)['colormap'][colormap_id]

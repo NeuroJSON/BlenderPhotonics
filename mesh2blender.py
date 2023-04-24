@@ -22,8 +22,6 @@ To cite this work, please use the below information
 """
 
 import bpy
-import numpy as np
-import jdata as jd
 import os
 from .utils import *
 
@@ -39,6 +37,7 @@ class mesh2scene(bpy.types.Operator):
     tool: bpy.props.EnumProperty(default=g_volmeshtype, name='visualization mesh type', items=enum_volmeshtype)
     
     def importmesh(self):
+        import jdata as jd
         # folder path for importing .jmsh files
 
         outputdir = GetBPWorkFolder();
