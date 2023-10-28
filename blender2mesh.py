@@ -171,7 +171,7 @@ class scene2mesh(bpy.types.Operator):
         except ImportError:
             raise ImportError('To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend')
 
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        oc.addpath(oc.genpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script')))
 
         oc.feval('blender2mesh',os.path.join(outputdir,'blendermesh.jmsh'), nargout=0)
 

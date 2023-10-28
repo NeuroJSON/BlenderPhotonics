@@ -78,7 +78,8 @@ class nii2mesh(bpy.types.Operator):
         except ImportError:
             raise ImportError('To run this feature, you must install the `oct2py` or `matlab.engine` Python module first, based on your choice of the backend')
 
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        oc.addpath(oc.genpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script')))
+
         oc.feval('nii2mesh',os.path.join(outputdir,'niipath.json'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
