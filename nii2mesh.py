@@ -24,8 +24,6 @@ To cite this work, please use the below information
 
 import bpy
 import numpy as np
-import jdata as jd
-import os
 from .utils import *
 
 g_maxvol=100
@@ -51,6 +49,9 @@ class nii2mesh(bpy.types.Operator):
     method: bpy.props.EnumProperty(name="Mesh extraction method", items = [('auto','auto','auto'),('cgalmesh','cgalmesh','cgalmesh'), ('cgalsurf','cgalsurf','cgalsurf'), ('simplify','simplify','simplify')])
  
     def vol2mesh(self):
+        import jdata as jd
+        import os
+
         # Remove last .jmsh file
         outputdir = GetBPWorkFolder()
         if not os.path.isdir(outputdir):
