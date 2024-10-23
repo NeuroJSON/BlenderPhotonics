@@ -1,4 +1,4 @@
-function nodedata=surf2jmesh(filename)
+function nodedata = surf2jmesh(filename)
 %
 % nodedata=surf2jmesh(filename)
 %
@@ -7,11 +7,11 @@ function nodedata=surf2jmesh(filename)
 % author: Qianqian Fang (q.fang at neu.edu)
 %
 % input:
-%	 filename: path to the surface mesh file, accept OFF (.off), Tetgen (.ele),
+%    filename: path to the surface mesh file, accept OFF (.off), Tetgen (.ele),
 %                  JMesh (.jmsh/.json), binary JMesh (.bmsh) and INRIA Medit (.medit) files
 %
 % output:
-%	 nodedata: a struct containing 
+%    nodedata: a struct containing
 %              MeshVertex3: an Nnx3 array for vertex coordinates
 %              MeshTri3: an Nex3 integer array for triangular surface elements
 %
@@ -35,19 +35,19 @@ function nodedata=surf2jmesh(filename)
 % -- this function is part of BlenderPhotonics (http://mcx.space/bp)
 %
 
-if(regexp(filename,'\.[Oo][Ff][Ff]$'))
-    [nodedata.MeshVertex3, nodedata.MeshTri3]=readoff(filename);
-elseif(regexp(filename,'\.[Mm][Ee][Dd][Ii][Tt]$'))
-    [nodedata.MeshVertex3, elem]=readmedit(filename);
-    nodedata.MeshTri3=volface(elem(:,1:4));
-elseif(regexp(filename,'\.[Ee][Ll][Ee]$'))
-    [pathstr,name,ext] = fileparts(filename);
-    [nodedata.node, elem]=readtetgen(fullfile(pathstr,name));
-    nodedata.MeshTri3=volface(elem(:,1:4));
-elseif(regexp(filename,'\.[Jj][Mm][Ee]*[Ss][Hh]$'))
-    nodedata=loadjson(filename);
-elseif(regexp(filename,'\.[Bb][Mm][Ee]*[Ss][Hh]$'))
-    nodedata=loadbj(filename);
-elseif(regexp(filename,'\.[Jj][Ss][Oo][Nn]$'))
-    nodedata=loadjson(filename);
+if (regexp(filename, '\.[Oo][Ff][Ff]$'))
+    [nodedata.MeshVertex3, nodedata.MeshTri3] = readoff(filename);
+elseif (regexp(filename, '\.[Mm][Ee][Dd][Ii][Tt]$'))
+    [nodedata.MeshVertex3, elem] = readmedit(filename);
+    nodedata.MeshTri3 = volface(elem(:, 1:4));
+elseif (regexp(filename, '\.[Ee][Ll][Ee]$'))
+    [pathstr, name, ext] = fileparts(filename);
+    [nodedata.node, elem] = readtetgen(fullfile(pathstr, name));
+    nodedata.MeshTri3 = volface(elem(:, 1:4));
+elseif (regexp(filename, '\.[Jj][Mm][Ee]*[Ss][Hh]$'))
+    nodedata = loadjson(filename);
+elseif (regexp(filename, '\.[Bb][Mm][Ee]*[Ss][Hh]$'))
+    nodedata = loadbj(filename);
+elseif (regexp(filename, '\.[Jj][Ss][Oo][Nn]$'))
+    nodedata = loadjson(filename);
 end

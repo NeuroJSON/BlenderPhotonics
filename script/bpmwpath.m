@@ -1,4 +1,4 @@
-function tempname=bpmwpath(fname)
+function tempname = bpmwpath(fname)
 %
 % tempname=bpmwpath(fname)
 %
@@ -7,10 +7,10 @@ function tempname=bpmwpath(fname)
 % author: Qianqian Fang (q.fang at neu.edu)
 %
 % input:
-%	 fname: a temporary file used internally by BP
+%    fname: a temporary file used internally by BP
 %
 % output:
-%	 tempname: the full path of the temporary file in the BP workfolder 
+%    tempname: the full path of the temporary file in the BP workfolder
 %
 % license: GPLv3 or later, see LICENSE.txt for details
 %
@@ -36,8 +36,8 @@ if (nargin < 1) || isempty(fname)
     fname = '';
 end
 
-tdir=mwpath('blenderphotonics')
-if(exist(tdir)==0)
-    mkdir(tdir)
+tdir = mwpath('blenderphotonics');
+if (exist(tdir) == 0)
+    mkdir(tdir);
 end
-tempname=[tdir filesep fname];
+tempname = [tdir filesep fname];

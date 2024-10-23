@@ -1,7 +1,7 @@
 """BlenderPhotonics - a Blender addon for 3-D mesh generation and Monte Carlo simulation
 
 * Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
-	   (c) 2021	 Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
+           (c) 2021	 Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
 * License: GNU General Public License V3 or later (GPLv3)
 * Version: v2022 (v0.6.0)
 * Website: http://mcx.space/bp
@@ -51,7 +51,6 @@ To cite this work, please use the below information
 
 [1] Iso2Mesh: http://iso2mesh.sf.net
 [2] MMCLAB:   http://mcx.space
-
 """
 
 bl_info = {
@@ -76,6 +75,7 @@ from .niifile import niifile
 from .nii2mesh import nii2mesh
 from bpy.props import PointerProperty
 
+
 def register():
     print("Registering BlenderPhotonics")
     bpy.utils.register_class(scene2mesh)
@@ -98,4 +98,3 @@ def unregister():
     bpy.utils.unregister_class(runmmc)
     bpy.utils.unregister_class(BlenderPhotonics_UI)
     del bpy.types.Scene.blender_photonics
-
