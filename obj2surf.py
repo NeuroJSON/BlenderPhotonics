@@ -209,7 +209,6 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
     bl_label = "Import Mesh"
     bl_description = "Import triangular surfaces in .json,.jmsh,.bmsh,.off,.medit,.stl,.smf,.gts"
 
-    filename_ext: "*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts"
     filepath: bpy.props.StringProperty(default='',subtype='DIR_PATH')
     filter_glob: bpy.props.StringProperty(
             default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
@@ -219,7 +218,17 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator,ImportHelper):
             )
 
     def execute(self, context):
-        oc = op.Oct2Py()
+        #run MMC
+        try:
+            if(bpy.context.scene.blender_photonics.backend == "octave"):
+                import oct2py as op
+                oc = op.Oct2Py()
+            else:
+                import matlab.engine as op
+                oc = op.start_matlab()
+        except ImportError:
+            raise ImportError('To run this feature, you must install the `oct2py` or `matlab.engine` Python module first, based on your choice of the backend')
+
         oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
         surfdata=oc.feval('surf2jmesh',self.filepath)
         AddMeshFromNodeFace(surfdata['MeshVertex3'],(np.array(surfdata['MeshTri3'])-1).tolist(),'importedsurf')
