@@ -22,11 +22,173 @@ To cite this work, please use the below information
 
 import bpy
 from bpy_extras.io_utils import ImportHelper
-import numpy as np
-import jdata as jd
 import os
 from bpy.utils import register_class, unregister_class
 from .utils import *
+from .dependencies import safe_import, require_dependency, show_error_message
+
+# Safe imports
+np = safe_import("numpy")
+jd = safe_import("jdata")
+
+
+def surf2jmesh(filename):
+    """
+    Python implementation of surf2jmesh.m
+
+    Load a triangular surface mesh from a file
+
+    Parameters:
+    -----------
+    filename : str
+        Path to the surface mesh file. Supports formats:
+        - OFF (.off)
+        - MEDIT (.medit)
+        - Tetgen (.ele)
+        - JMesh (.jmsh/.json)
+        - Binary JMesh (.bmsh)
+        - STL (.stl)
+        - SMF (.smf)
+        - GTS (.gts)
+
+    Returns:
+    --------
+    dict
+        Dictionary containing:
+        - MeshVertex3: Nx3 array of vertex coordinates
+        - MeshTri3(1): Mx3 array of triangular surface elements (indexed for consistency with regional meshes)
+    """
+    import re
+    import os.path
+
+    # Convert filename to lowercase for pattern matching
+    filename_lower = filename.lower()
+
+    nodedata = {}
+
+    try:
+        if re.search(r"\.off$", filename_lower):
+            # OFF format
+            if not require_dependency("iso2mesh", "OFF file loading"):
+                return None
+            from iso2mesh import readoff
+
+            vertex, faces = readoff(filename)
+            nodedata["MeshVertex3"] = vertex
+            nodedata["MeshTri3(1)"] = faces
+
+        elif re.search(r"\.medit$", filename_lower):
+            # MEDIT format
+            if not require_dependency("iso2mesh", "MEDIT file loading"):
+                return None
+            from iso2mesh import readmedit, volface
+
+            vertex, elem = readmedit(filename)
+            nodedata["MeshVertex3"] = vertex
+            if elem.shape[1] >= 4:
+                # Extract surface faces from tetrahedra
+                nodedata["MeshTri3(1)"] = volface(elem[:, :4])
+            else:
+                nodedata["MeshTri3(1)"] = elem
+
+        elif re.search(r"\.ele$", filename_lower):
+            # Tetgen format
+            if not require_dependency("iso2mesh", "Tetgen file loading"):
+                return None
+            from iso2mesh import readtetgen, volface
+
+            pathstr, name = os.path.split(filename)
+            name_no_ext = os.path.splitext(name)[0]
+            vertex, elem = readtetgen(os.path.join(pathstr, name_no_ext))
+            nodedata["MeshVertex3"] = vertex
+            nodedata["MeshTri3(1)"] = volface(elem[:, :4])
+
+        elif re.search(r"\.(jmsh|json)$", filename_lower):
+            # JMesh JSON format
+            if not require_dependency("jdata", "JSON/JMesh file loading"):
+                return None
+            nodedata = jd.load(filename)
+            # Convert MeshTri3 to MeshTri3(1) if it exists
+            if "MeshTri3" in nodedata and "MeshTri3(1)" not in nodedata:
+                nodedata["MeshTri3(1)"] = nodedata.pop("MeshTri3")
+
+        elif re.search(r"\.bmsh$", filename_lower):
+            # Binary JMesh format
+            if not require_dependency("jdata", "binary JMesh file loading"):
+                return None
+            nodedata = jd.load(filename)
+            # Convert MeshTri3 to MeshTri3(1) if it exists
+            if "MeshTri3" in nodedata and "MeshTri3(1)" not in nodedata:
+                nodedata["MeshTri3(1)"] = nodedata.pop("MeshTri3")
+
+        elif re.search(r"\.stl$", filename_lower):
+            # STL format - try to use readoff as fallback
+            try:
+                if not require_dependency("iso2mesh", "STL file loading"):
+                    return None
+                from iso2mesh import readoff
+
+                vertex, faces = readoff(filename)
+                nodedata["MeshVertex3"] = vertex
+                nodedata["MeshTri3(1)"] = faces
+            except:
+                show_error_message(
+                    "STL format not fully supported. Please convert to OFF or JMesh format.",
+                    "Format Error",
+                )
+                return None
+
+        elif re.search(r"\.smf$", filename_lower):
+            # SMF format - try to use readoff as fallback
+            try:
+                if not require_dependency("iso2mesh", "SMF file loading"):
+                    return None
+                from iso2mesh import readoff
+
+                vertex, faces = readoff(filename)
+                nodedata["MeshVertex3"] = vertex
+                nodedata["MeshTri3(1)"] = faces
+            except:
+                show_error_message(
+                    "SMF format not fully supported. Please convert to OFF or JMesh format.",
+                    "Format Error",
+                )
+                return None
+
+        elif re.search(r"\.gts$", filename_lower):
+            # GTS format
+            if not require_dependency("iso2mesh", "GTS file loading"):
+                return None
+            from iso2mesh import readgts
+
+            vertex, faces = readgts(filename)
+            nodedata["MeshVertex3"] = vertex
+            nodedata["MeshTri3(1)"] = faces
+
+        else:
+            show_error_message(f"Unsupported file format: {filename}", "Format Error")
+            return None
+
+        # Ensure we have the required fields
+        if "MeshVertex3" not in nodedata or "MeshTri3(1)" not in nodedata:
+            show_error_message(
+                "Invalid mesh data: missing vertex or face information", "Data Error"
+            )
+            return None
+
+        # Convert to numpy arrays if they aren't already and numpy is available
+        if np and hasattr(np, "array"):
+            if not isinstance(nodedata["MeshVertex3"], np.ndarray):
+                nodedata["MeshVertex3"] = np.array(nodedata["MeshVertex3"])
+            if not isinstance(nodedata["MeshTri3(1)"], np.ndarray):
+                nodedata["MeshTri3(1)"] = np.array(nodedata["MeshTri3(1)"])
+
+        return nodedata
+
+    except Exception as e:
+        show_error_message(f"Error loading surface mesh: {str(e)}", "Load Error")
+        return None
+
 
 g_action = "repair"
 g_actionparam = 1.0
@@ -77,16 +239,8 @@ enum_action = [
         "Boolean-decouple: Decouple two shell meshes",
         "Insert a small gap between two touching objects",
     ),
-    (
-        "simplify",
-        "Surface simplification",
-        "Simplifing a surface by decimating edges",
-    ),
-    (
-        "remesh",
-        "Remesh surface",
-        "Remesh surface and remove badly shaped triangles",
-    ),
+    ("simplify", "Surface simplification", "Simplifing a surface by decimating edges"),
+    ("remesh", "Remesh surface", "Remesh surface and remove badly shaped triangles"),
     ("smooth", "Smooth selected objects", "Smooth selected mesh object"),
     (
         "reorient",
@@ -127,6 +281,11 @@ class object2surf(bpy.types.Operator):
         return hints[properties.action]
 
     def func(self):
+        if not require_dependency("jdata", "surface mesh operations"):
+            return
+        if not require_dependency("numpy", "numerical operations"):
+            return
+
         outputdir = GetBPWorkFolder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
@@ -188,30 +347,22 @@ class object2surf(bpy.types.Operator):
             return
 
         try:
-            if bpy.context.scene.blender_photonics.backend == "octave":
-                import oct2py as op
-
-                oc = op.Oct2Py()
-            else:
-                import matlab.engine as op
-
-                oc = op.start_matlab()
-        except ImportError:
-            raise ImportError(
-                "To run this feature, you must install the oct2py or matlab.engine Python modulem first, based on your choice of the backend"
+            # Use Python-based implementation instead of backend selection
+            # TODO: Implement Python-based obj2surf functionality
+            show_error_message(
+                "obj2surf functionality is being updated to work with Python directly. Please check back later.",
+                "Python Implementation",
             )
-
-        oc.addpath(
-            oc.genpath(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "script")
+            return
+        except ImportError as e:
+            show_error_message(
+                f"Python implementation failed: {str(e)}.", "Implementation Error"
             )
-        )
+            return
 
-        oc.feval(
-            "blender2surf",
-            os.path.join(outputdir, "blendersurf.jmsh"),
-            nargout=0,
-        )
+        # TODO: Replace with Python implementation
+        # oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'script'))
+        # oc.feval('blender2surf',os.path.join(outputdir,'blendersurf.jmsh'), nargout=0)
 
         # import volum mesh to blender(just for user to check the result)
         if len(bpy.context.selected_objects) >= 1:
@@ -226,9 +377,7 @@ class object2surf(bpy.types.Operator):
                 if ("_DataInfo_" in ob) and ("BlenderObjectName" in ob["_DataInfo_"]):
                     objname = ob["_DataInfo_"]["BlenderObjectName"]
                 AddMeshFromNodeFace(
-                    ob["MeshVertex3"],
-                    (np.array(ob["MeshTri3"]) - 1).tolist(),
-                    objname,
+                    ob["MeshVertex3"], (np.array(ob["MeshTri3"]) - 1).tolist(), objname
                 )
                 bpy.context.view_layer.objects.active = bpy.data.objects[objname]
             else:
@@ -327,6 +476,7 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator, ImportHelper):
         "Import triangular surfaces in .json,.jmsh,.bmsh,.off,.medit,.stl,.smf,.gts"
     )
 
+    filename_ext = "*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts"
     filepath: bpy.props.StringProperty(default="", subtype="DIR_PATH")
     filter_glob: bpy.props.StringProperty(
         default="*.json;*.jmsh;*.bmsh;*.off;*.medit;*.stl;*.smf;*.gts",
@@ -336,30 +486,33 @@ class OBJECT2SURF_OT_invoke_import(bpy.types.Operator, ImportHelper):
     )
 
     def execute(self, context):
-        # run MMC
+        if not require_dependency("jdata", "JSON/JMesh import"):
+            return {"CANCELLED"}
+        if not require_dependency("numpy", "numerical operations"):
+            return {"CANCELLED"}
+        if not require_dependency("iso2mesh", "mesh file import"):
+            return {"CANCELLED"}
+
         try:
-            if bpy.context.scene.blender_photonics.backend == "octave":
-                import oct2py as op
+            surfdata = surf2jmesh(self.filepath)
+            if surfdata is None:
+                show_error_message(
+                    f"Failed to load surface mesh from {self.filepath}", "Import Error"
+                )
+                return {"CANCELLED"}
 
-                oc = op.Oct2Py()
-            else:
-                import matlab.engine as op
-
-                oc = op.start_matlab()
-        except ImportError:
-            raise ImportError(
-                "To run this feature, you must install the `oct2py` or `matlab.engine` Python module first, based on your choice of the backend"
+            AddMeshFromNodeFace(
+                surfdata["MeshVertex3"],
+                (np.array(surfdata["MeshTri3(1)"]) - 1).tolist(),
+                "importedsurf",
             )
+            return {"FINISHED"}
 
-        oc.addpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "script"))
-        surfdata = oc.feval("surf2jmesh", self.filepath)
-        AddMeshFromNodeFace(
-            surfdata["MeshVertex3"],
-            (np.array(surfdata["MeshTri3"]) - 1).tolist(),
-            "importedsurf",
-        )
-
-        return {"FINISHED"}
+        except Exception as e:
+            show_error_message(
+                f"Error importing surface mesh: {str(e)}", "Import Error"
+            )
+            return {"CANCELLED"}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)

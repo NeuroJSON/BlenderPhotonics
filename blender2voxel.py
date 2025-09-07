@@ -1,4 +1,4 @@
-"""Blender2Mesh - converting Blender objects/scene to 3-D tetrahedral mesh
+"""Blender2Mesh - converting Blender objects/scene to 3-D voxel mesh
 
 * Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
            (c) 2021      Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
@@ -59,20 +59,20 @@ enum_endstep = [
     (
         "6",
         "Step 6: Run Iso2Mesh and load mesh",
-        "Output tetrahedral mesh using Iso2Mesh (http://iso2mesh.sf.net)",
+        "Output voxel mesh using Iso2Mesh (http://iso2mesh.sf.net)",
     ),
     (
         "9",
         "Run all steps",
-        "Create 3-D tetrahedral meshes using Iso2Mesh and Octave (please save your Blender session first!)",
+        "Create 3-D voxel meshes using Iso2Mesh and Octave (please save your Blender session first!)",
     ),
 ]
 
 
-class scene2tmesh(bpy.types.Operator):
-    bl_label = "Convert scene to tetrahedral mesh"
-    bl_description = "Create 3-D tetrahedral meshes using Iso2Mesh (please save your Blender session first!)"
-    bl_idname = "blenderphotonics.createtmesh"
+class scene2vmesh(bpy.types.Operator):
+    bl_label = "Convert scene to voxel mesh"
+    bl_description = "Create 3-D voxelization meshes using Iso2Mesh and Octave (please save your Blender session first!)"
+    bl_idname = "blenderphotonics.createvoxelmesh"
 
     # creat a interface to set uesrs' model parameter.
 
@@ -88,8 +88,7 @@ class scene2tmesh(bpy.types.Operator):
         default=g_dorepair, name="Repair mesh (single object only)"
     )
     onlysurf: bpy.props.BoolProperty(
-        default=g_onlysurf,
-        name="Return triangular surface mesh only (no tetrahedral mesh)",
+        default=g_onlysurf, name="Return triangular surface mesh only (no voxel mesh)"
     )
     convtri: bpy.props.BoolProperty(
         default=g_convtri, name="Convert to triangular mesh first"
@@ -99,6 +98,11 @@ class scene2tmesh(bpy.types.Operator):
     )
     tetgenopt: bpy.props.StringProperty(
         default=g_tetgenopt, name="Additional tetgen flags"
+    )
+    voxeldiv: bpy.props.IntProperty(
+        default=g_voxeldiv,
+        name="division number along the shortest edge of the mesh "
+        "(resolution), 0 to disable",
     )
     colormap: bpy.props.StringProperty(default=g_colormap, name="color scheme")
 
@@ -153,17 +157,16 @@ class scene2tmesh(bpy.types.Operator):
 
             # Save region mesh
             log_message("Saving region mesh...")
-            jd.save(outputmesh, os.path.join(outputdir, "regionTmesh.jmsh"))
+            jd.save(outputmesh, os.path.join(outputdir, "regionVmesh.jmsh"))
 
             # Generate and save volume mesh (all faces)
             log_message("Saving volume mesh...")
             faces = meshface(elem[:, :4])
 
             volume_mesh = meshdata.copy()
-            volume_mesh["MeshNode"] = node.tolist()
-            volume_mesh["MeshFace"] = faces.tolist()
-            volume_mesh["MeshElem"] = elem.tolist()
-            jd.save(volume_mesh, os.path.join(outputdir, "volumeTmesh.jmsh"))
+            volume_mesh["MeshTri3"] = faces.tolist()
+            volume_mesh["MeshTet4"] = elem.tolist()
+            jd.save(volume_mesh, os.path.join(outputdir, "volumeVmesh.jmsh"))
 
             log_message("Mesh saving complete.")
 
@@ -179,18 +182,18 @@ class scene2tmesh(bpy.types.Operator):
         if not require_dependency("numpy", "mesh processing"):
             return
 
-        log_message("Initializing workspace...")
+        log_message("Initializing voxel mesh workspace...")
         outputdir = GetBPWorkFolder()
         if not os.path.isdir(outputdir):
             os.makedirs(outputdir)
             log_message(f"Created workspace directory: {outputdir}")
 
-        if os.path.exists(os.path.join(outputdir, "regionTmesh.jmsh")):
-            os.remove(os.path.join(outputdir, "regionTmesh.jmsh"))
-            log_message("Removed existing regionTmesh.jmsh")
-        if os.path.exists(os.path.join(outputdir, "volumeTmesh.jmsh")):
-            os.remove(os.path.join(outputdir, "volumeTmesh.jmsh"))
-            log_message("Removed existing volumeTmesh.jmsh")
+        if os.path.exists(os.path.join(outputdir, "regionVmesh.jmsh")):
+            os.remove(os.path.join(outputdir, "regionVmesh.jmsh"))
+            log_message("Removed existing regionVmesh.jmsh")
+        if os.path.exists(os.path.join(outputdir, "volumeVmesh.jmsh")):
+            os.remove(os.path.join(outputdir, "volumeVmesh.jmsh"))
+            log_message("Removed existing volumeVmesh.jmsh")
 
         # remove camera and source
         log_message("Removing cameras, lights, and other non-mesh objects...")
@@ -348,6 +351,7 @@ class scene2tmesh(bpy.types.Operator):
             log_message("Stopping at step 4: Surface tesselation complete")
             return
 
+        # output mesh data to Octave
         # this works only in object mode,
         log_message("Extracting mesh data...")
 
@@ -467,7 +471,9 @@ class scene2tmesh(bpy.types.Operator):
             if self.convtri:
                 f = np.array([]).reshape(0, 3)
             else:
-                f = []  # Save file
+                f = []
+
+        # Save file
         log_message("Saving mesh data to JMesh format...")
         meshdata = {
             "_DataInfo_": {
@@ -482,11 +488,12 @@ class scene2tmesh(bpy.types.Operator):
                 "mergetol": self.mergetol,
                 "dorepair": self.dorepair,
                 "tetgenopt": self.tetgenopt,
+                "div": self.voxeldiv,
             },
         }
-        jd.save(meshdata, os.path.join(outputdir, "blenderTmesh.jmsh"))
+        jd.save(meshdata, os.path.join(outputdir, "blenderVmesh.jmsh"))
         log_message(
-            f"Saved mesh data to: {os.path.join(outputdir,'blenderTmesh.jmsh')}"
+            f"Saved mesh data to: {os.path.join(outputdir,'blenderVmesh.jmsh')}"
         )
 
         if int(self.endstep) == 5:
@@ -502,10 +509,21 @@ class scene2tmesh(bpy.types.Operator):
         if require_dependency("iso2mesh", "mesh generation operations"):
             try:
                 # Import iso2mesh functions
-                from iso2mesh import s2m, removedupnodes, meshcheckrepair
-                from .utils import run_in_background
+                from iso2mesh import s2m, removedupnodes, meshcheckrepair, s2v
 
-                log_message("Using Python-based iso2mesh for mesh generation")
+                log_message("Using Python-based iso2mesh for voxel mesh generation")
+
+                bbx = np.array(
+                    [
+                        v[:, 0].min(),
+                        v[:, 1].min(),
+                        v[:, 2].min(),
+                        v[:, 0].max(),
+                        v[:, 1].max(),
+                        v[:, 2].max(),
+                    ]
+                )
+                log_message(f"Mesh bounding box: {bbx}")
 
                 # Process vertices and faces based on parameters
                 vertices, faces = v, f
@@ -519,32 +537,88 @@ class scene2tmesh(bpy.types.Operator):
                     log_message("Repairing mesh...")
                     vertices, faces = meshcheckrepair(vertices, faces, "meshfix")
 
-                # Define the heavy computation function
-                def generate_tetrahedral_mesh():
-                    """This function runs in background thread"""
-                    log_message(
-                        "Generating tetrahedral mesh... This may take a while..."
-                    )
-                    node, elem, _ = s2m(
-                        vertices,
-                        faces,
-                        self.keepratio,
-                        self.maxvol,
-                        "tetgen1.5",
-                        [],
-                        [],
-                        self.tetgenopt,
-                    )
-                    log_message(
-                        f"Generated {len(elem)} tetrahedra with {len(node)} nodes"
-                    )
-                    return node, elem
+                # Generate tetrahedral mesh first using s2m (surface to mesh)
+                log_message(
+                    "Generating intermediate tetrahedral mesh... This may take a while..."
+                )
+                node, elem, _ = s2m(
+                    vertices,
+                    faces,
+                    self.keepratio,
+                    self.maxvol,
+                    "tetgen1.5",
+                    [],
+                    [],
+                    self.tetgenopt,
+                )
+                log_message(
+                    f"Generated tetrahedral mesh with {len(node)} nodes and {len(elem)} elements"
+                )
 
-                # Define callback function for when mesh generation completes
-                def on_mesh_complete(result):
+                # Define the heavy computation function for voxel generation
+                def generate_voxel_mesh():
+                    """This function runs in background thread"""
+                    # Generate voxel mesh if requested
+                    if self.voxeldiv > 0:
+                        log_message(
+                            f"Generating voxel mesh with division: {self.voxeldiv}"
+                        )
+                        image = s2v(node, elem, self.voxeldiv, label=1)
+                    else:
+                        log_message(f"Generating voxel mesh with default division: 50")
+                        image = s2v(node, elem, 50, label=1)
+
+                    log_message(
+                        f"Generated voxel mesh with shape: {np.array(image).shape}"
+                    )
+
+                    # Calculate scale factors
+                    image_scale = (
+                        np.min(
+                            np.array(
+                                [bbx[3] - bbx[0], bbx[4] - bbx[1], bbx[5] - bbx[2]]
+                            )
+                        )
+                        / self.voxeldiv
+                    )
+                    image_move = np.array([bbx[0], bbx[1], bbx[2]])
+                    log_message(f"Image scale factors: {image_scale}")
+                    log_message(f"Image offset: {image_move}")
+
+                    # affine matrix
+                    affine_matrix = np.array(
+                        [
+                            [image_scale, 0, 0, image_move[0]],
+                            [0, image_scale, 0, image_move[1]],
+                            [0, 0, image_scale, image_move[2]],
+                            [0, 0, 0, 1],
+                        ]
+                    )
+                    log_message(f"Generated affine transformation matrix")
+
+                    return node, elem, image, affine_matrix
+
+                # Define callback function for when voxel generation completes
+                def on_voxel_complete(result):
                     """This function runs on main thread when background task completes"""
                     try:
-                        node, elem = result
+                        node, elem, image, affine_matrix = result
+
+                        # Save image mesh data using jdata
+                        log_message("Saving voxel mesh data...")
+                        image_data = {
+                            "_DataInfo_": {
+                                "JMeshVersion": "0.5",
+                                "Comment": "Voxel mesh created by BlenderPhotonics Python iso2mesh implementation",
+                            },
+                            "ImageMesh": image,
+                            "ImageScale": affine_matrix,
+                        }
+                        # Save using jdata (JSON format for mesh data)
+                        jd.save(image_data, os.path.join(outputdir, "imageVmesh.jmsh"))
+                        log_message(
+                            f"Saved voxel mesh to: {os.path.join(outputdir, 'imageVmesh.jmsh')}"
+                        )
 
                         # Save region mesh (surface of each region)
                         log_message("Saving region mesh...")
@@ -556,49 +630,54 @@ class scene2tmesh(bpy.types.Operator):
                             bpy.data.objects.remove(obj)
                         bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-                        # Load surface mesh only
-                        if os.path.exists(os.path.join(outputdir, "regionTmesh.jmsh")):
-                            log_message("Loading generated mesh into Blender...")
-                            regiondata = jd.load(
-                                os.path.join(outputdir, "regionTmesh.jmsh")
-                            )
-                            if len(regiondata.keys()) > 1:  # More than just _DataInfo_
-                                LoadReginalMesh(regiondata, "region_")
-                                if "region_1" in bpy.data.objects:
-                                    bpy.context.view_layer.objects.active = (
-                                        bpy.data.objects["region_1"]
-                                    )
+                        log_message("Loading generated voxel mesh into Blender...")
+                        LoadVolMesh(
+                            {"image": image, "scale": affine_matrix},
+                            "Iso2Mesh",
+                            outputdir,
+                            mode="model_view",
+                            colormap=self.colormap,
+                        )
+                        if "Iso2Mesh" in bpy.data.objects:
+                            bpy.context.view_layer.objects.active = bpy.data.objects[
+                                "Iso2Mesh"
+                            ]
 
                         log_message(
-                            "✓ Mesh generation completed successfully!", "SUCCESS"
+                            "✓ Voxel mesh generation completed successfully!", "SUCCESS"
                         )
                         show_error_message(
-                            "Mesh generation completed successfully using Python iso2mesh!",
+                            "Voxel mesh generation completed successfully using Python iso2mesh!",
                             "Success",
                         )
 
                     except Exception as e:
                         log_message(
-                            f"Error in mesh completion callback: {str(e)}", "ERROR"
+                            f"Error in voxel completion callback: {str(e)}", "ERROR"
                         )
                         show_error_message(
-                            f"Error in mesh completion: {str(e)}", "Completion Error"
+                            f"Error in voxel completion: {str(e)}", "Completion Error"
                         )
 
-                # Start background mesh generation
+                # Import background threading utility
+                from .utils import run_in_background
+
+                # Start background voxel generation
                 success = run_in_background(
-                    generate_tetrahedral_mesh,
-                    callback=on_mesh_complete,
-                    thread_name="tetrahedral_mesh_generation",
+                    generate_voxel_mesh,
+                    callback=on_voxel_complete,
+                    thread_name="voxel_mesh_generation",
                 )
 
                 if success:
                     log_message(
-                        "Tetrahedral mesh generation started in background. Blender UI remains responsive."
+                        "Voxel mesh generation started in background. Blender UI remains responsive."
                     )
                     log_message("Use 'Show Log Window' to monitor progress.")
                 else:
-                    log_message("Another mesh generation is already running", "WARNING")
+                    log_message(
+                        "Another voxel mesh generation is already running", "WARNING"
+                    )
 
             except ImportError as e:
                 log_message(f"Failed to import iso2mesh functions: {str(e)}", "ERROR")
@@ -606,27 +685,29 @@ class scene2tmesh(bpy.types.Operator):
                     f"Failed to import iso2mesh functions: {str(e)}", "Import Error"
                 )
             except Exception as e:
-                log_message(f"Error during mesh generation setup: {str(e)}", "ERROR")
+                log_message(f"Error during voxel mesh generation: {str(e)}", "ERROR")
                 show_error_message(
-                    f"Error during mesh generation setup: {str(e)}",
+                    f"Error during voxel mesh generation: {str(e)}",
                     "Mesh Generation Error",
                 )
         else:
             # Fallback message for missing iso2mesh
-            log_message("iso2mesh package is required for mesh generation", "ERROR")
+            log_message(
+                "iso2mesh package is required for voxel mesh generation", "ERROR"
+            )
             show_error_message(
-                "iso2mesh package is required for mesh generation. Please install it using the button in the BlenderPhotonics panel.",
+                "iso2mesh package is required for voxel mesh generation. Please install it using the button in the BlenderPhotonics panel.",
                 "Missing Dependency",
             )
 
         # at this point, if successful, iso2mesh generated mesh objects are imported into blender
         if int(self.endstep) < 7:
-            log_message("Mesh generation process completed")
+            log_message("Voxel mesh generation process completed")
             return
 
-        log_message("All steps completed successfully!")
+        log_message("All voxel mesh steps completed successfully!")
         ShowMessageBox(
-            "Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'",
+            "Voxel mesh generation is complete. The combined voxel mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'",
             "BlenderPhotonics",
         )
 
@@ -635,12 +716,11 @@ class scene2tmesh(bpy.types.Operator):
 
         # Clear previous log and log start message
         clear_log()
-        log_message("Starting tetrahedral mesh generation process...")
-        print("=== BlenderPhotonics: Starting tetrahedral mesh generation ===")
+        log_message("Starting voxel mesh generation process...")
+        print("=== BlenderPhotonics: Starting voxel mesh generation ===")
         print("Tip: Use 'Show Log Window' button to view detailed progress")
 
-        # Run the mesh generation function
-        print("begin to generate mesh")
+        print("begin to generate voxel mesh")
         self.func()
         return {"FINISHED"}
 
@@ -671,24 +751,33 @@ class BLENDER2MESH_OT_invoke_saveas(bpy.types.Operator):
     filepath = bpy.props.StringProperty(default="", subtype="DIR_PATH")
 
     def execute(self, context):
+        from .utils import log_message
+
         print(self.filepath)
         if not (self.filepath == ""):
-            if os.name == "nt":
-                os.popen(
-                    "copy '"
-                    + os.path.join(GetBPWorkFolder(), "blenderTmesh.jmsh")
-                    + "' '"
-                    + self.filepath
-                    + "'"
-                )
-            else:
-                os.popen(
-                    "cp '"
-                    + os.path.join(GetBPWorkFolder(), "blenderTmesh.jmsh")
-                    + "' '"
-                    + self.filepath
-                    + "'"
-                )
+            source_file = os.path.join(GetBPWorkFolder(), "blenderVmesh.jmsh")
+
+            # Validate source file exists
+            if not os.path.exists(source_file):
+                log_message(f"Error: Source file not found: {source_file}", "ERROR")
+                return {"CANCELLED"}
+
+            try:
+                if os.name == "nt":
+                    import shutil
+
+                    shutil.copy2(source_file, self.filepath)
+                else:
+                    import shutil
+
+                    shutil.copy2(source_file, self.filepath)
+                log_message(f"File successfully copied to: {self.filepath}")
+            except Exception as e:
+                log_message(f"Error copying file: {str(e)}", "ERROR")
+                return {"CANCELLED"}
+        else:
+            log_message("No file path selected", "WARNING")
+            return {"CANCELLED"}
         return {"FINISHED"}
 
     def invoke(self, context, event):

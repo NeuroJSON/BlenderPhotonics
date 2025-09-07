@@ -1,4 +1,4 @@
-"""NII2Mesh - converting a 3-D volumetric image (stored in NIfTI/JNIfTI/.mat file) to tetrahedral mesh
+"""NII2Voxel - converting NIfTI/JNIfTI volume data to voxel mesh for pMCX simulation
 
 * Authors: (c) 2021-2022 Qianqian Fang <q.fang at neu.edu>
            (c) 2021      Yuxuan Zhang <zhang.yuxuan1 at northeastern.edu>
@@ -21,12 +21,19 @@ To cite this work, please use the below information
 }
 """
 
-
 import bpy
-import numpy as np
-import jdata as jd
 import os
+import re
+import urllib.request
+from bpy.props import StringProperty, FloatProperty, EnumProperty
+from bpy.types import PropertyGroup, Operator
 from .utils import *
+from .dependencies import safe_import, require_dependency, show_error_message
+
+# Safe imports
+np = safe_import("numpy")
+jd = safe_import("jdata")
+iso2mesh = safe_import("iso2mesh")
 
 g_maxvol = 100
 g_radbound = 10
@@ -36,138 +43,395 @@ g_imagetype = "multi-label"
 g_method = "auto"
 
 
-class nii2mesh(bpy.types.Operator):
-    bl_label = "Convert 3-D image file to mesh"
-    bl_description = "Click this button to convert a 3D volume stored in JNIfTI (.jnii/.bnii, see http://neurojson.org) or NIfTI (.nii/.nii.gz) or .mat file to a mesh"
-    bl_idname = "blenderphotonics.creatregion"
+class niivoxelfile(PropertyGroup):
+    """File browser properties for NIfTI and voxel mesh files"""
 
-    # creat a interface to set uesrs' model parameter.
+    path: StringProperty(
+        name="JNIfTI File",
+        description="Accept NIfTI (.nii/.nii.gz), JSON based JNIfTI (.jnii/.bnii, see http://neurojson.org) and MATLAB .mat file (read the first 3D array object)",
+        default="",
+        maxlen=2048,
+        subtype="FILE_PATH",
+    )
+    surffile: StringProperty(
+        name="JMesh File",
+        description="Accept voxel meshes stored in JSON-based JMesh (.jmsh/.bmsh, see http://neurojson.org), OFF, STL, ASC, SMF, and GTS formats",
+        default="",
+        maxlen=2048,
+        subtype="FILE_PATH",
+    )
+    optical_params_file: StringProperty(
+        name="Optical Parameters File",
+        description="JSON file containing optical parameters for different tissue regions",
+        default="",
+        maxlen=2048,
+        subtype="FILE_PATH",
+    )
 
+
+class LoadVolumeOperator(Operator):
+    """Load and preview volume data from NIfTI/JNIfTI file"""
+
+    bl_idname = "blenderphotonics.load_volume"
+    bl_label = "Load Volume"
+    bl_description = "Load and preview volume data from the selected file"
     bl_options = {"REGISTER", "UNDO"}
-    maxvol: bpy.props.FloatProperty(default=g_maxvol, name="Maximum tetrahedron volume")
-    radbound: bpy.props.FloatProperty(
-        default=g_radbound, name="Surface triangle maximum diameter"
-    )
-    distbound: bpy.props.FloatProperty(
-        default=g_distbound, name="Maximum deviation from true boundary"
-    )
-    isovalue: bpy.props.FloatProperty(
-        default=g_isovalue, name="Isovalue to create surface"
-    )
-    imagetype: bpy.props.EnumProperty(
-        name="Volume type",
-        items=[
-            ("multi-label", "multi-label", "multi-label"),
-            ("binary", "binary", "binary"),
-            ("grayscale", "grayscale", "grayscale"),
-        ],
-    )
-    method: bpy.props.EnumProperty(
-        name="Mesh extraction method",
-        items=[
-            ("auto", "auto", "auto"),
-            ("cgalmesh", "cgalmesh", "cgalmesh"),
-            ("cgalsurf", "cgalsurf", "cgalsurf"),
-            ("simplify", "simplify", "simplify"),
-        ],
-    )
-
-    def vol2mesh(self):
-        # Remove last .jmsh file
-        outputdir = GetBPWorkFolder()
-        if not os.path.isdir(outputdir):
-            os.makedirs(outputdir)
-        if os.path.exists(os.path.join(outputdir, "regionmesh.jmsh")):
-            os.remove(os.path.join(outputdir, "regionmesh.jmsh"))
-        if os.path.exists(os.path.join(outputdir, "volumemesh.jmsh")):
-            os.remove(os.path.join(outputdir, "volumemesh.jmsh"))
-
-        # nii to mesh
-        niipath = bpy.context.scene.blender_photonics.path
-        print(niipath)
-        if len(niipath) == 0:
-            return
-        jd.save(
-            {
-                "niipath": niipath,
-                "maxvol": self.maxvol,
-                "radbound": self.radbound,
-                "distbound": self.distbound,
-                "isovalue": self.isovalue,
-                "imagetype": self.imagetype,
-                "method": self.method,
-            },
-            os.path.join(outputdir, "niipath.json"),
-        )
-
-        # run MMC
-        try:
-            if bpy.context.scene.blender_photonics.backend == "octave":
-                import oct2py as op
-
-                oc = op.Oct2Py()
-            else:
-                import matlab.engine as op
-
-                oc = op.start_matlab()
-        except ImportError:
-            raise ImportError(
-                "To run this feature, you must install the `oct2py` or `matlab.engine` Python module first, based on your choice of the backend"
-            )
-
-        oc.addpath(
-            oc.genpath(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "script")
-            )
-        )
-
-        oc.feval("nii2mesh", os.path.join(outputdir, "niipath.json"), nargout=0)
-
-        # import volum mesh to blender(just for user to check the result)
-        bpy.ops.object.select_all(action="SELECT")
-        bpy.ops.object.delete()
-
-        regiondata = jd.load(os.path.join(outputdir, "regionmesh.jmsh"))
-        regiondata = JMeshFallback(regiondata)
-        n = len(regiondata.keys()) - 1
-
-        # To import mesh.ply in batches
-        for i in range(0, n):
-            surfkey = "MeshTri3(" + str(i + 1) + ")"
-            if n == 1:
-                surfkey = "MeshTri3"
-            if not isinstance(regiondata[surfkey], np.ndarray):
-                regiondata[surfkey] = np.asarray(regiondata[surfkey], dtype=np.uint32)
-            regiondata[surfkey] -= 1
-            AddMeshFromNodeFace(
-                regiondata["MeshVertex3"],
-                regiondata[surfkey].tolist(),
-                "region_" + str(i + 1),
-            )
-
-        bpy.context.space_data.shading.type = "WIREFRAME"
-
-        ShowMessageBox(
-            "Mesh generation is complete. The combined tetrahedral mesh is imported for inspection. To set optical properties for each region, please click 'Load mesh and setup simulation'",
-            "BlenderPhotonics",
-        )
 
     def execute(self, context):
-        self.vol2mesh()
+        bp = bpy.context.scene.blender_photonics_voxel
+        inputfile = bp.path
+
+        if not inputfile or not os.path.exists(inputfile):
+            show_error_message("Please select a valid input file", "File Error")
+            return {"CANCELLED"}
+
+        try:
+            if not require_dependency("jdata", "volume loading"):
+                return {"CANCELLED"}
+
+            if not np:
+                show_error_message(
+                    "NumPy is required for volume processing", "Dependency Error"
+                )
+                return {"CANCELLED"}
+
+            log_message(f"Loading volume data from: {inputfile}", "INFO")
+
+            if inputfile.endswith(("nii", "nii.gz")):
+                # Load volume data using jdata
+                volume_data = jd.loadjd(inputfile)
+                log_message(f"Loaded data structure: {type(volume_data)}", "INFO")
+                image = volume_data["NIFTIData"]
+                image = (image - np.min(image)) / (
+                    np.max(image) - np.min(image)
+                )  # normalize data to [0, 1]
+            elif inputfile.endswith("mat"):
+                log_message("Starting voxel mesh conversion from mat...", "INFO")
+                volume_data = jd.loadjd(inputfile)
+                image = volume_data["vol"]
+                image = (image - np.min(image)) / (
+                    np.max(image) - np.min(image)
+                )  # normalize data to [0, 1]
+
+                output_dir = os.path.dirname(inputfile)
+                # clear all object in scence
+                bpy.ops.object.select_all(action="SELECT")
+                bpy.ops.object.delete()
+
+            # Use existing ConvertMat2Vdb and volume import functions from utils
+            base_name = (
+                os.path.splitext(os.path.basename(inputfile))[0]
+                if inputfile.endswith(("nii", "nii.gz"))
+                else "MatInput"
+            )
+            output_dir = os.path.dirname(inputfile)
+
+            # Convert volume array to VDB format
+            LoadVolMesh(
+                {"NIFTIData": image, "scale": np.eye(4)},
+                base_name,
+                output_dir,
+                "nii_view",
+            )
+
+            ShowMessageBox(
+                f"Volume loaded successfully!\nShape: {image.shape}\nRange: {image.min():.3f} to {image.max():.3f}",
+                "Volume Loaded",
+            )
+
+        except Exception as e:
+            log_message(f"Error loading volume: {str(e)}", "ERROR")
+            show_error_message(f"Failed to load volume: {str(e)}", "Load Error")
+            return {"CANCELLED"}
+
+        return {"FINISHED"}
+
+
+class volume2voxel(Operator):
+    """Convert NIfTI/JNIfTI volume to voxel mesh for pMCX simulation"""
+
+    bl_idname = "blenderphotonics.volume2voxel"
+    bl_label = "Convert to Voxel Mesh"
+    bl_description = "Convert loaded volume data to voxel mesh format for pMCX Monte Carlo simulation"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def vol2voxel(self):
+        if not require_dependency("jdata", "volume to voxel mesh conversion"):
+            return
+        if not require_dependency("iso2mesh", "volume to voxel mesh conversion"):
+            return
+
+        bp = bpy.context.scene.blender_photonics_voxel
+        inputfile = bp.path
+
+        if not inputfile or not os.path.exists(inputfile):
+            show_error_message("Please select a valid input file", "File Error")
+            return
+
+        try:
+            if inputfile.endswith((".nii", ".nii.gz")):
+                log_message("Starting voxel mesh conversion...", "INFO")
+                volume_data = jd.loadjd(inputfile)
+                log_message(f"Loaded data structure: {type(volume_data)}", "INFO")
+                image = volume_data["NIFTIData"]
+                _, inverse = np.unique(
+                    image, return_inverse=True
+                )  # unique_vals: region labels
+                image = inverse.reshape(image.shape)  # Convert to multi-label
+                image = image.astype(
+                    "uint8"
+                )  # Ensure data type is uint8 for voxel mesh
+                log_message(f"Input file: {inputfile}", "INFO")
+                log_message(
+                    "Starting voxel mesh conversion (no additional parameters needed)",
+                    "INFO",
+                )
+
+                output_dir = os.path.dirname(inputfile)
+                # clear all object in scence
+                bpy.ops.object.select_all(action="SELECT")
+                bpy.ops.object.delete()
+
+                # Load the volume mesh
+                LoadVolMesh(
+                    {"NIFTIData": image, "scale": np.eye(4)},
+                    "NiiSetup",
+                    output_dir,
+                    "nii_view",
+                )
+
+            elif inputfile.endswith("mat"):
+                log_message("Starting voxel mesh conversion from mat...", "INFO")
+                volume_data = jd.loadjd(inputfile)
+                log_message(f"Loaded data structure: {type(volume_data)}", "INFO")
+                image = volume_data["vol"]
+                _, inverse = np.unique(
+                    image, return_inverse=True
+                )  # unique_vals: region labels
+                image = inverse.reshape(image.shape)  # Convert to multi-label
+                image = image.astype(
+                    "uint8"
+                )  # Ensure data type is uint8 for voxel mesh
+                log_message(f"Input file: {inputfile}", "INFO")
+                log_message(
+                    "Starting voxel mesh conversion (no additional parameters needed)",
+                    "INFO",
+                )
+
+                output_dir = os.path.dirname(inputfile)
+                # clear all object in scence
+                bpy.ops.object.select_all(action="SELECT")
+                bpy.ops.object.delete()
+
+                # Load the volume mesh
+                LoadVolMesh(
+                    {"NIFTIData": image, "scale": np.eye(4)},
+                    "MatSetup",
+                    output_dir,
+                    "nii_view",
+                )
+
+            # Generate output filename
+            output_dir = GetBPWorkFolder()
+            output_path = os.path.join(output_dir, "imageVmesh.jmsh")
+            image_data = {
+                "_DataInfo_": {
+                    "JMeshVersion": "0.5",
+                    "Comment": "Created by BlenderPhotonics (http:\/\/mcx.space\/BlenderPhotonics)",
+                },
+                "ImageMesh": image,
+                "ImageScale": np.eye(4),
+            }
+            jd.savejd(image_data, output_path)
+
+        except Exception as e:
+            log_message(f"Error during voxel mesh conversion: {str(e)}", "ERROR")
+            show_error_message(
+                f"Voxel mesh conversion failed: {str(e)}", "Conversion Error"
+            )
+            return
+
+        ShowMessageBox("Voxel mesh generation is complete.", "BlenderPhotonics")
+
+        ## add light source
+        light_data = bpy.data.lights.new(name="Lightsource", type="SPOT")
+        light_object = bpy.data.objects.new(name="Lightsource", object_data=light_data)
+        bpy.context.collection.objects.link(light_object)
+        bpy.context.view_layer.objects.active = light_object
+        light_object.location = (0, 0, 5)
+        light_object.scale = (0.1, 0.1, 1)
+        dg = bpy.context.evaluated_depsgraph_get()
+        dg.update()
+
+        # add cfg option
+        obj = bpy.data.objects["Lightsource"]
+        obj["nphoton"] = 10000
+        obj["srctype"] = "pencil"
+        obj["srcparam1"] = [0.0, 0.0, 0.0, 0.0]
+        obj["srcparam2"] = [0.0, 0.0, 0.0, 0.0]
+        obj["unitinmm"] = 1
+
+        log_message("Light source added successfully", "INFO")
+
+    def execute(self, context):
+        self.vol2voxel()
         return {"FINISHED"}
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
 
-#
-#   Dialog to set meshing properties
-#
-class setmeshingprop(bpy.types.Panel):
-    bl_label = "Mesh extraction setting"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+class LoadOpticalParametersOperator(Operator):
+    """Load optical parameters from JSON file"""
 
-    def draw(self, context):
-        global g_maxvol, g_radbound, g_distbound, g_imagetype, g_method
-        self.layout.operator("object.dialog_operator")
+    bl_idname = "blenderphotonics.load_optical_params"
+    bl_label = "Load Optical Parameters"
+    bl_description = "Load optical parameters from JSON file for tissue regions"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        bp = bpy.context.scene.blender_photonics_voxel
+        params_file = bp.optical_params_file
+
+        if not params_file or not os.path.exists(params_file):
+            show_error_message(
+                "Please select a valid optical parameters file", "File Error"
+            )
+            return {"CANCELLED"}
+
+        try:
+            if not require_dependency("jdata", "optical parameters loading"):
+                return {"CANCELLED"}
+
+            log_message(f"Loading optical parameters from: {params_file}", "INFO")
+
+            if (
+                "NiiSetup_nii" not in bpy.data.objects
+                and "MatSetup_nii" not in bpy.data.objects
+            ):
+                show_error_message(
+                    "NiiSetup_nii or MatSetup_nii object not found", "Object Error"
+                )
+                return {"CANCELLED"}
+
+            if params_file.endswith(".json"):
+                obj = bpy.data.objects["NiiSetup_nii"]
+                optical_parameter = jd.load(params_file)
+                digit = int(math.log(optical_parameter["prop"].shape[0] - 1, 10) + 1)
+                for i in range(1, optical_parameter["region number"] + 1):
+                    region_name = f"region_{str(i).rjust(digit, '0')}"
+                    if region_name in optical_parameter["optical parameters"]:
+                        obj.data["Optical_prop_" + str(i).rjust(digit, "0")] = (
+                            optical_parameter["optical parameters"][region_name]
+                        )
+                        log_message(
+                            f"Loaded parameters for {region_name}: {optical_parameter['optical parameters'][region_name]}",
+                            "INFO",
+                        )
+                    else:
+                        log_message(
+                            f"Region {i} parameters not found in file", "WARNING"
+                        )
+            elif params_file.endswith(".mat"):
+                obj = bpy.data.objects["MatSetup_nii"]
+                optical_parameter = jd.loadjd(params_file)
+                digit = int(math.log(optical_parameter["prop"].shape[0] - 1, 10) + 1)
+                for i in range(1, optical_parameter["prop"].shape[0]):
+                    region_name = f"region_{str(i).rjust(digit, '0')}"
+                    obj.data["Optical_prop_" + str(i).rjust(digit, "0")] = (
+                        optical_parameter["prop"][i]
+                    )
+                    log_message(
+                        f"Loaded parameters for {region_name}: {optical_parameter['prop'][i]}",
+                        "INFO",
+                    )
+
+                # Light source setup if mat contain information
+                obj = bpy.data.objects["Lightsource"]
+                obj["nphoton"] = (
+                    optical_parameter["nphoton"]
+                    if "nphoton" in optical_parameter
+                    else 10000
+                )
+                obj["srctype"] = (
+                    optical_parameter["srctype"]
+                    if "srctype" in optical_parameter
+                    else "pencil"
+                )
+                obj["srcparam1"] = (
+                    optical_parameter["srcparam1"]
+                    if "srcparam1" in optical_parameter
+                    else [0.0, 0.0, 0.0, 0.0]
+                )
+                obj["srcparam2"] = (
+                    optical_parameter["srcparam2"]
+                    if "srcparam2" in optical_parameter
+                    else [0.0, 0.0, 0.0, 0.0]
+                )
+                obj["unitinmm"] = (
+                    optical_parameter["unitinmm"]
+                    if "unitinmm" in optical_parameter
+                    else 1
+                )
+                obj.location = (
+                    optical_parameter["srcpos"][0]
+                    if "srcpos" in optical_parameter
+                    else (0.0, 0.0, 0.0)
+                )
+
+                log_message(
+                    f"Light source parameters: nphoton={obj['nphoton']}, srctype={obj['srctype']}, srcparam1={obj['srcparam1']}, srcparam2={obj['srcparam2']}, unitinmm={obj['unitinmm']}, location={obj.location}",
+                    "INFO",
+                )
+
+                import mathutils
+
+                target_direction = (
+                    mathutils.Vector(optical_parameter["srcdir"][0])
+                    if "srcdir" in optical_parameter
+                    else mathutils.Vector((0.0, 0.0, -1.0))
+                )
+                target_direction.normalize()
+                rotation_quaternion = mathutils.Vector(
+                    (0.0, 0.0, -1.0)
+                ).rotation_difference(target_direction)
+                log_message(f"rotation_quaternion: {rotation_quaternion}", "INFO")
+                obj.rotation_mode = "QUATERNION"
+                obj.rotation_quaternion = rotation_quaternion
+
+            log_message("Optical parameters loaded successfully", "INFO")
+
+        except Exception as e:
+            log_message(f"Error loading optical parameters: {str(e)}", "ERROR")
+            show_error_message(
+                f"Failed to load optical parameters: {str(e)}", "Load Error"
+            )
+            return {"CANCELLED"}
+
+        return {"FINISHED"}
+
+
+#
+# Define registration for Blender
+#
+
+blender_classes = [
+    niivoxelfile,
+    LoadVolumeOperator,
+    volume2voxel,
+    LoadOpticalParametersOperator,
+]
+
+
+def register():
+    for blender_class in blender_classes:
+        bpy.utils.register_class(blender_class)
+
+
+def unregister():
+    for blender_class in blender_classes:
+        bpy.utils.unregister_class(blender_class)
+
+
+if __name__ == "__main__":
+    register()
