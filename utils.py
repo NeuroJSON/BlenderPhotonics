@@ -368,9 +368,9 @@ def ConvertMat2Vdb(meshdata, name, path, mode):
 
     if (not isinstance(meshdata, np.ndarray)) or not meshdata.dtype == np.float32:
         meshdata = np.asarray(meshdata, dtype=np.float32)
-    if mode == "model_view" or mode == "nii_view":
+    if mode == "model_view" :
         mesh = meshdata
-    elif mode == "result_view":
+    elif mode == "result_view" or mode == "nii_view":
         mesh = meshdata.transpose(2, 1, 0)
     grid_list = []
     model = vdb.FloatGrid()
@@ -471,7 +471,7 @@ def LoadVolMesh(mesh_np, id, path, mode, colormap="jet"):
     obj.location.z += mesh_np["scale"][2, 3]
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
-    if mode == "result_view":
+    if mode == "result_view" or mode == "nii_view":
         bpy.ops.transform.rotate(value=-math.pi / 2, orient_axis="Y")
         bpy.ops.transform.mirror(
             orient_type="GLOBAL",
